@@ -1,0 +1,116 @@
+# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+# def options(opt):
+#     pass
+
+# def configure(conf):
+#     conf.check_nonfatal(header_name='stdint.h', define_name='HAVE_STDINT_H')
+
+def build(bld):
+    module = bld.create_ns3_module('cunb', ['core'])
+    module.source = [
+        'model/cunb.cc',
+        'model/cunb-channel.cc',
+        'model/cunb-mac.cc',
+        'model/cunb-phy.cc',
+        'model/cunb-mac-header.cc',
+        'model/cunb-mac-trailer.cc',
+        'model/cunb-mac-header-ul.cc',
+        'model/cunb-mac-trailer-ul.cc',
+        'model/cunb-net-device.cc',
+        'model/mobile-autonomous-reporting.cc',
+        'model/enb-cunb-phy.cc',
+        'model/ms-cunb-phy.cc',
+        'model/enb-cunb-mac.cc',
+        'model/ms-cunb-mac.cc',
+        'model/cunb-mac-command.cc',
+        'model/cunb-device-address.cc',
+        'model/cunb-frame-header.cc',
+        'model/cunb-frame-header-ul.cc',
+        'model/cunb-linklayer-header.cc',
+        'model/cunb-linklayer-header-ul.cc',
+        'model/cunb-forwarder.cc',
+        'model/logical-cunb-channel.cc',
+        'model/cunb-tag.cc',
+        'model/enb-status.cc',
+        'model/ms-status.cc',
+        'model/simple-cunb-server.cc',
+        'model/sub-band-cunb.cc',
+        'model/cunb-device-address-generator.cc',
+        'model/cunb-beacon-header.cc',
+        'model/cunb-beacon-trailer.cc',
+        'model/one-time-reporting.cc',
+        'model/beacon-sender.cc',
+        'model/app-layer-header.cc',
+        'helper/cunb-mac-helper.cc',
+        'helper/cunb-phy-helper.cc',
+        'helper/cunb-helper.cc',
+        'helper/MAR_helper.cc',
+        'helper/logical-cunb-channel-helper.cc',
+        'helper/cunb-interference-helper.cc',
+        'helper/cunb-server-helper.cc',
+        'helper/cunb-forwarder-helper.cc',
+        'helper/OTR_Helper.cc',
+        'helper/beacon-sender-helper.cc',
+        
+        ]
+
+    module_test = bld.create_ns3_module_test_library('cunb')
+    module_test.source = [
+        'test/cunb-test-suite.cc',
+        ]
+
+    headers = bld(features='ns3header')
+    headers.module = 'cunb'
+    headers.source = [
+        'model/cunb.h',
+        'model/cunb-channel.h',
+        'model/cunb-mac.h',
+        'model/cunb-phy.h',
+        'model/cunb-mac-header.h',
+        'model/cunb-mac-trailer.h',
+        'model/cunb-mac-header-ul.h',
+        'model/cunb-mac-trailer-ul.h',
+        'model/cunb-net-device.h',
+        'model/mobile-autonomous-reporting.h',
+        'model/enb-cunb-phy.h',
+        'model/ms-cunb-phy.h',
+        'model/enb-cunb-mac.h',
+        'model/ms-cunb-mac.h',
+        'model/cunb-mac-command.h',
+        'model/cunb-device-address.h',
+        'model/cunb-frame-header.h',
+        'model/cunb-frame-header-ul.h',
+        'model/cunb-linklayer-header.h',
+        'model/cunb-linklayer-header-ul.h',
+        'model/cunb-forwarder.h',
+        'model/logical-cunb-channel.h',
+        'model/cunb-tag.h',
+        'model/enb-status.h',
+        'model/ms-status.h',
+        'model/simple-cunb-server.h',
+        'model/sub-band-cunb.h',
+        'model/cunb-device-address-generator.h',
+        'model/cunb-beacon-header.h',
+        'model/cunb-beacon-trailer.h',
+        'model/one-time-reporting.h',
+        'model/beacon-sender.h',
+        'model/app-layer-header.h',
+        'helper/cunb-mac-helper.h',
+        'helper/cunb-phy-helper.h',
+        'helper/cunb-helper.h',
+        'helper/MAR_helper.h',
+        'helper/logical-cunb-channel-helper.h',
+        'helper/cunb-interference-helper.h',
+        'helper/cunb-server-helper.h',
+        'helper/cunb-forwarder-helper.h',
+        'helper/OTR_Helper.h',
+        'helper/beacon-sender-helper.h',
+        
+        ]
+
+    if bld.env.ENABLE_EXAMPLES:
+        bld.recurse('examples')
+
+    # bld.ns3_python_bindings()
+

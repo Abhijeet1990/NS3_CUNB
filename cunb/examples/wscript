@@ -1,0 +1,18 @@
+# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+def build(bld):
+    obj = bld.create_ns3_program('simple-cunb-network-example', ['cunb'])
+    obj.source = 'simple-cunb-network-example.cc'
+
+    obj = bld.create_ns3_program('cunb-server-example', ['cunb'])
+    obj.source = 'cunb-server-example.cc'
+
+    obj = bld.create_ns3_program('cunb-header-test', ['cunb'])
+    obj.source = 'cunb-header-test.cc'
+
+    obj = bld.create_ns3_program('cunb_channel_test', ['cunb'])
+    obj.source = 'cunb_channel_test.cc'
+
+    obj = bld.create_ns3_program('beacon-cunb-server-example', ['cunb'])
+    obj.source = 'beacon-cunb-server-example.cc'
+
