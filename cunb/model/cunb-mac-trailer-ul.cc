@@ -24,7 +24,7 @@ const uint16_t CunbMacTrailerUl::CUNB_MAC_ECC_LENGTH = 2;
 const uint16_t CunbMacTrailerUl::CUNB_MAC_AUTH_LENGTH = 2;
 
 CunbMacTrailerUl::CunbMacTrailerUl (void)
-  : m_auth(12),m_ecc(12),m_calcFcs (true)
+  : m_ecc(12),m_calcFcs (true)
 {
 }
 
@@ -76,7 +76,7 @@ CunbMacTrailerUl::Deserialize (Buffer::Iterator start)
   m_auth = start.ReadU16 ();
     m_ecc = start.ReadU16();
     m_fcs = start.ReadU16();
-    std::cout<<"start at deserialize: "<< m_fcs <<std::endl;
+    //std::cout<<"start at deserialize: "<< m_fcs <<std::endl;
 
   return CUNB_MAC_FCS_LENGTH + CUNB_MAC_ECC_LENGTH + CUNB_MAC_AUTH_LENGTH;
 }
@@ -99,7 +99,7 @@ CunbMacTrailerUl::SetFcsUl (Ptr<const Packet> p)
 
       //m_fcs = GenerateCrc8Ul (serial_packet, size);
       m_fcs = GenerateCrc16Ul (serial_packet, size);
-      std::cout << "FCS set: "<< m_fcs << std::endl;
+      //std::cout << "FCS set: "<< m_fcs << std::endl;
       delete[] serial_packet;
     }
 }
@@ -125,7 +125,7 @@ CunbMacTrailerUl::CheckFcsUl (Ptr<const Packet> p)
       //checkFcs = GenerateCrc8Ul (serial_packet, size);
       checkFcs = GenerateCrc16Ul (serial_packet, size);
       delete[] serial_packet;
-      std::cout<<"checkFcs: "<<checkFcs << "Get Fcs: "<< GetFcsUl();
+      //std::cout<<"checkFcs: "<<checkFcs << "Get Fcs: "<< GetFcsUl();
       return (checkFcs == GetFcsUl ());
     }
 }
@@ -149,12 +149,32 @@ CunbMacTrailerUl::GetAuthUl(void) const
 void
 CunbMacTrailerUl::SetAuthUl (Ptr<const Packet> p)
 {
+	// Implementation of SHA-1 Hash
+
+	// as the Hash returns 128 bits, we use only the last 16 bits
+	uint16_t size = p->GetSize ();
+	uint8_t *serial_packet = new uint8_t[size];
+
+	p->CopyData (serial_packet, size);
+	m_auth = GenerateHashUl (serial_packet, size);
+	//std::cout << "Set auth: "<< m_auth;
+	delete[] serial_packet;
 
 }
 
-bool CheckAuthUl (Ptr<const Packet> p)
+bool
+CunbMacTrailerUl::CheckAuthUl (Ptr<const Packet> p)
 {
-  return true;
+	uint16_t checkAuth;
+    uint16_t size = p->GetSize ();
+	uint8_t *serial_packet = new uint8_t[size];
+
+	p->CopyData (serial_packet, size);
+
+	checkAuth = GenerateHashUl(serial_packet, size);
+	delete[] serial_packet;
+	//std::cout<<" checkAuth: "<< checkAuth << "GetAuth(): "<< m_auth <<std::endl;
+	return (checkAuth == GetAuthUl());
 }
 
 bool
@@ -215,6 +235,27 @@ CunbMacTrailerUl::GenerateCrc16Ul (uint8_t *data, int length)
       ++data;
     }
   return accumulator;
+}
+
+uint16_t
+CunbMacTrailerUl::GenerateHashUl(uint8_t* data, int length)
+{
+	std::string store_data = "";
+	for (int i = 0; i < length; ++i)
+	{
+	    store_data+= *data;
+	    ++data;
+	}
+
+	CryptoPP::SHA1 sha1;
+	std::string hash_sha = "";
+	CryptoPP::StringSource(store_data, true, new CryptoPP::HashFilter(sha1, new CryptoPP::HexEncoder(new CryptoPP::StringSink(hash_sha))));
+	//std::cout<< "Hash : " << hash_sha<<std::endl;
+	//uint16_t hash = stoi(hash_sha);
+	std::string subline = hash_sha.substr(hash_sha.length()-4,hash_sha.length());
+    uint16_t hash = (int)strtol(subline.c_str(), 0, 16);
+	return hash;
+
 }
 
 } //namespace ns3

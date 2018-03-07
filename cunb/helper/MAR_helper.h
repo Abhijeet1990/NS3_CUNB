@@ -8,6 +8,7 @@
 #include "ns3/node-container.h"
 #include "ns3/application-container.h"
 #include "ns3/mobile-autonomous-reporting.h"
+#include "ns3/ms-cunb-mac.h"
 #include <stdint.h>
 #include <string>
 
@@ -50,6 +51,10 @@ enum packetType{
    */
   void SetPeriod (Time period);
 
+  void SetMac(Ptr<MSCunbMac> mac);
+
+  void SetInitialDelay(Time delay);
+
 private:
   Ptr<Application> InstallPriv (Ptr<Node> node, enum packetType pType) const;
 
@@ -57,13 +62,17 @@ private:
 
   double m_packetSize;
 
-  Ptr<UniformRandomVariable> m_initialDelay;
+  //Ptr<UniformRandomVariable> m_initialDelay;
+
+  Time m_initialDelay;
 
   Ptr<UniformRandomVariable> m_intervalProb;
 
   Time m_period; //!< The period with which the application will be set to send
                  // messages
   Ptr<ExponentialRandomVariable> m_expInterval;
+
+  Ptr<MSCunbMac> m_mac;
 
 
 };

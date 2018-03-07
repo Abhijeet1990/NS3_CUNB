@@ -17,12 +17,12 @@ EnbCunbPhy::ReceptionPath::ReceptionPath(double frequencyMHz) :
   m_available (1),
   m_event (0)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 }
 
 EnbCunbPhy::ReceptionPath::~ReceptionPath(void)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 }
 
 double
@@ -100,21 +100,24 @@ EnbCunbPhy::GetTypeId (void)
 EnbCunbPhy::EnbCunbPhy () :
   m_isTransmitting (false)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 }
 
 EnbCunbPhy::~EnbCunbPhy ()
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 }
 
-// Set a fixed Receiver Sensitivity
-const double EnbCunbPhy::sensitivity = -150.0;
+// Set a fixed Receiver Sensitivity in dBm
+//const double EnbCunbPhy::sensitivity = -150.0;
+
+//const double EnbCunbPhy::sensitivity = -130.0;
+const double EnbCunbPhy::sensitivity = -120.0;
 
 void
 EnbCunbPhy::AddReceptionPath (double frequencyMHz)
 {
-  NS_LOG_FUNCTION (this << frequencyMHz);
+  //NS_LOG_FUNCTION (this << frequencyMHz);
 
   m_receptionPaths.push_back (Create<EnbCunbPhy::ReceptionPath>
                                 (frequencyMHz));
@@ -123,7 +126,7 @@ EnbCunbPhy::AddReceptionPath (double frequencyMHz)
 void
 EnbCunbPhy::ResetReceptionPaths (void)
 {
-  NS_LOG_FUNCTION (this);
+  //NS_LOG_FUNCTION (this);
 
   m_receptionPaths.clear ();
 }
@@ -132,7 +135,7 @@ void
 EnbCunbPhy::Send (Ptr<Packet> packet, CunbTxParameters txParams,
                       double frequencyMHz, double txPowerDbm)
 {
-  NS_LOG_FUNCTION (this << packet << frequencyMHz << txPowerDbm);
+  //NS_LOG_FUNCTION (this << packet << frequencyMHz << txPowerDbm);
 
   // Get the time a packet with these parameters will take to be transmitted
   Time duration = GetOnAirTime (packet, txParams,ENB);
@@ -154,6 +157,8 @@ EnbCunbPhy::Send (Ptr<Packet> packet, CunbTxParameters txParams,
    *  have a power up to 27 dBm.
    */
   m_interference.Add (duration, txPowerDbm, packet, frequencyMHz);
+
+  NS_LOG_INFO("Sending Packet of duration "<< duration <<" using Frequency "<<frequencyMHz);
 
   // Send the packet in the channel
   m_channel->Send (this, packet, txPowerDbm, txParams, duration, frequencyMHz);
@@ -205,8 +210,7 @@ EnbCunbPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
     {
       Ptr<EnbCunbPhy::ReceptionPath> currentPath = *it;
 
-      NS_LOG_DEBUG ("Current ReceptionPath is centered on frequency = " <<
-                    currentPath->GetFrequency ());
+      //NS_LOG_DEBUG ("Current ReceptionPath is centered on frequency = " <<currentPath->GetFrequency ());
 
       // If the receive path is available and listening on the channel of
       // interest, we have a candidate
@@ -218,8 +222,7 @@ EnbCunbPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
 
           if (rxPowerDbm < sensitivity)   // Packet arrived below sensitivity
             {
-              NS_LOG_INFO ("Dropping packet reception of packet because under the sensitivity of "
-                           << sensitivity << " dBm");
+              //NS_LOG_INFO ("Dropping packet reception of packet because under the sensitivity of "<< sensitivity << " dBm");
 
               if (m_device)
                 {
@@ -236,8 +239,7 @@ EnbCunbPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
             }
           else    // We have sufficient sensitivity to start receiving
             {
-              NS_LOG_INFO ("Scheduling reception of a packet, " <<
-                           "occupying one demodulator");
+              //NS_LOG_INFO ("Scheduling reception of a packet, occupying one demodulator");
 
               // Block this resource
               currentPath->LockOnEvent (event);
@@ -253,7 +255,7 @@ EnbCunbPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
         }
     }
   // If we get to this point, there are no demodulators we can use
-  NS_LOG_INFO ("Dropping packet reception of packet because no suitable demodulator was found");
+  //NS_LOG_INFO ("Dropping packet reception of packet because no suitable demodulator was found for "<< frequencyMHz);
 
   // Fire the trace source
   if (m_device)
@@ -270,7 +272,7 @@ void
 EnbCunbPhy::EndReceive (Ptr<Packet> packet,
                             Ptr<CunbInterferenceHelper::Event> event)
 {
-  NS_LOG_FUNCTION (this << packet << *event);
+  //NS_LOG_FUNCTION (this << packet << *event);
 
   // Call the trace source
   m_phyRxEndTrace (packet);
@@ -284,7 +286,7 @@ EnbCunbPhy::EndReceive (Ptr<Packet> packet,
   // Check whether the packet was destroyed
   if (packetDestroyed != uint8_t (0))
     {
-      NS_LOG_DEBUG ("packetDestroyed by " << unsigned(packetDestroyed));
+      NS_LOG_INFO ("packetDestroyed by " << unsigned(packetDestroyed));
 
       // Update the packet's cunbTag
       CunbTag tag;
@@ -304,10 +306,10 @@ EnbCunbPhy::EndReceive (Ptr<Packet> packet,
     }
   else   // Reception was correct
     {
-
       // Fire the trace source
       if (m_device)
         {
+    	  //NS_LOG_INFO("Packet succesfully received at Enb");
           m_successfullyReceivedPacket (packet, m_device->GetNode ()->GetId ());
         }
       else
@@ -355,7 +357,7 @@ EnbCunbPhy::EndReceive (Ptr<Packet> packet,
 bool
 EnbCunbPhy::IsOnFrequency (double frequencyMHz)
 {
-  NS_LOG_FUNCTION (this << frequencyMHz);
+  //NS_LOG_FUNCTION (this << frequencyMHz);
 
   // Search every demodulator to see whether there's one listening on this
   // frequency.
@@ -365,8 +367,7 @@ EnbCunbPhy::IsOnFrequency (double frequencyMHz)
     {
       Ptr<EnbCunbPhy::ReceptionPath> currentPath = *it;
 
-      NS_LOG_DEBUG ("Current reception path is on frequency " <<
-                    currentPath->GetFrequency ());
+      //NS_LOG_DEBUG ("Current reception path is on frequency " <<currentPath->GetFrequency ());
 
       if (currentPath->GetFrequency () == frequencyMHz)
         {

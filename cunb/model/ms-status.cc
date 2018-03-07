@@ -61,6 +61,7 @@ MSStatus::UpdateEnbData (Address enbAddress, double rcvPower)
     }
   // Create a new entry
   m_enbs.insert (std::pair<Address, double> (enbAddress, rcvPower));
+
 }
 
 Address
@@ -105,6 +106,7 @@ MSStatus::GetSortedEnbAddresses (void)
   return addresses;
 }
 
+
 bool
 MSStatus::HasReply (void)
 {
@@ -122,7 +124,7 @@ MSStatus::SetReply (struct Reply reply)
 }
 
 Ptr<Packet>
-MSStatus::GetReplyPacket (void)
+MSStatus::GetReplyPacket (uint8_t seqNo, uint16_t ident)
 {
   NS_LOG_FUNCTION (this);
 
@@ -134,7 +136,7 @@ MSStatus::GetReplyPacket (void)
   replyPacket->AddHeader (m_reply.macHeader);
   m_reply.macTrailer.EnableFcs(true);
   m_reply.macTrailer.SetFcs(replyPacket);
-  m_reply.macTrailer.SetAuth(replyPacket);
+  m_reply.macTrailer.SetAuthDL(replyPacket, seqNo,ident);
   replyPacket->AddTrailer(m_reply.macTrailer);
 
 

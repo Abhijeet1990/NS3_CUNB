@@ -54,8 +54,6 @@ NwkAddr::Get (void) const
   return m_nwkAddr;
 }
 
-// LoraDeviceAddress
-////////////////////
 
 CunbDeviceAddress::CunbDeviceAddress ()
 {

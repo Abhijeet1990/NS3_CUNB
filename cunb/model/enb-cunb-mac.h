@@ -6,6 +6,8 @@
 #include "ns3/cunb-device-address.h"
 #include "ns3/cunb-beacon-header.h"
 #include "ns3/cunb-beacon-trailer.h"
+#include "ns3/cunb-mac-header.h"
+#include "ns3/node-container.h"
 
 
 namespace ns3 {
@@ -38,8 +40,17 @@ public:
    */
   Time GetWaitingTime (double frequency);
 
+  virtual void SendRequest(Ptr<Packet> packet,Ptr<Node> ms );
+  virtual void ReceiveRequest (Ptr<Packet const> packet);
   virtual void SendBeacon(Ptr<Packet> packet);
   virtual void ReceiveBeacon(Ptr<Packet const> packet);
+
+  // check the APDU type
+  uint8_t CheckAPDUType(Ptr<Packet> packet);
+
+  Ptr<Node> GetSMToRespond(Ptr<Packet> packet);
+
+  CunbDeviceAddress GetSMAddress(Ptr<Packet> packet);
 
   void ScheduleNextBeacon();
 
@@ -57,6 +68,11 @@ public:
   void SetBeaconInterval (Time interval);
     /// \return interval between two beacons
   Time GetBeaconInterval () const;
+
+  /**
+   * Set the message type to send when the Send method is called.
+   */
+  void SetMType (CunbMacHeader::MType mType);
     /**
      * \brief Next beacon frame time
      * \return TBTT time
@@ -74,6 +90,32 @@ public:
      */
   void ShiftTbtt (Time shift);
     // \}
+
+
+  /**
+    * Type definition for a callback for when a packet is correctly received, it is notified to the
+    * OneTimeRequesting Application
+    *
+    */
+   typedef Callback<void, Ptr<const Packet> , Ptr<Node>> RxReEnbOkCallback;
+
+
+   /**
+      * Set the callback to call upon successful reception of a Response packet.
+      *
+      * This method is typically called by an upper Application (One Time Requesting) layer that wants to be
+      * notified after the successful reception of a packet.
+      */
+   void SetReceiveResponseOkCallback (RxReEnbOkCallback callback);
+
+   void SetFreqToRespond(double frequency);
+
+   double GetFreqToRespond(void);
+
+   double GetFreqFromAddress(CunbDeviceAddress address);
+
+   bool CheckIfHello(Ptr<Packet> packet);
+
 
 private:
 
@@ -95,7 +137,28 @@ private:
   /// "Timer" for the next beacon
   EventId m_beaconSendEvent;
 
+  /**
+   * The message type to apply to packets sent with the Send method.
+   */
+  CunbMacHeader::MType m_mType;
+
+ // std::list<CunbDeviceAddress> m_msAddresses;
+
+  NodeContainer m_msContainer;
+
+  double m_freqTorespond;
+
+  std::list<std::pair<CunbDeviceAddress,double>> m_address_freq_pair;
+
+  TracedCallback<Ptr<const Packet>> m_reqAssociation;
+  TracedCallback<Ptr<const Packet>> m_reqGet;
+
 protected:
+
+  /**
+   * The callback to perform upon correct reception of a packet.
+   */
+  RxReEnbOkCallback m_rxReEnbOkCallback;
 
 };
 

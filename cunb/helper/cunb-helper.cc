@@ -2,6 +2,7 @@
 
 #include "ns3/cunb-helper.h"
 #include "ns3/log.h"
+#include "ns3/trace-helper.h"
 
 namespace ns3 {
 
@@ -59,5 +60,38 @@ CunbHelper::Install ( const CunbPhyHelper &phy,
 {
   return Install (phy, mac, NodeContainer (node));
 }
+
+void
+CunbHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename)
+{
+  //
+  // All of the Pcap enable functions vector through here including the ones
+  // that are wandering through all of devices on perhaps all of the nodes in
+  // the system.  We can only deal with devices of type PointToPointNetDevice.
+  //
+  Ptr<CunbNetDevice> device = nd->GetObject<CunbNetDevice> ();
+  if (device == 0)
+    {
+      NS_LOG_INFO ("CunbHelper::EnablePcapInternal(): Device " << device << " not of type ns3::PointToPointNetDevice");
+      return;
+    }
+
+  PcapHelper pcapHelper;
+
+  std::string filename;
+  if (explicitFilename)
+    {
+      filename = prefix;
+    }
+  else
+    {
+      filename = pcapHelper.GetFilenameFromDevice (prefix, device);
+    }
+
+  Ptr<PcapFileWrapper> file = pcapHelper.CreateFile (filename, std::ios::out,
+                                                     PcapHelper::DLT_PPP);
+  pcapHelper.HookDefaultSink<CunbNetDevice> (device, "PromiscSniffer", file);
+}
+
 }
 

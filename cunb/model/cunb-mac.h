@@ -5,6 +5,7 @@
 #include "ns3/logical-cunb-channel-helper.h"
 #include "ns3/packet.h"
 #include "ns3/cunb-phy.h"
+#include "ns3/node-container.h"
 #include <array>
 
 namespace ns3 {
@@ -68,6 +69,10 @@ public:
      * \param packet the received packet
      */
   virtual void ReceiveBeacon (Ptr<Packet const> packet) = 0;
+
+  virtual void SendRequest (Ptr<Packet> packet , Ptr<Node> ms) = 0;
+
+  virtual void ReceiveRequest (Ptr<Packet const> packet) = 0;
 
   /**
    * Perform actions after sending a packet.
@@ -191,6 +196,11 @@ protected:
    * Trace source that is fired when a packet reaches the MAC layer.
    */
   TracedCallback<Ptr<const Packet> > m_receivedPacket;
+
+  /**
+   * Trace source that is fired when a packet reaches the MAC layer.
+   */
+  TracedCallback<Ptr<const Packet> > m_startSending;
 
   /**
    * The PHY instance that sits under this MAC layer.

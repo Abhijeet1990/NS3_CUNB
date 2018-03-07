@@ -53,6 +53,7 @@ Ptr<SubBandCunb>
 LogicalCunbChannelHelper::GetSubBandFromFrequency (double frequency)
 {
   // Get the SubBand this frequency belongs to
+  NS_LOG_INFO("frequency" << frequency);
   std::list< Ptr< SubBandCunb > >::iterator it;
   for (it = m_subBandList.begin (); it != m_subBandList.end (); it++) {
       if ((*it)->BelongsToSubBand (frequency))
@@ -211,6 +212,7 @@ LogicalCunbChannelHelper::GetTxPowerForChannel (Ptr<LogicalCunbChannel>
       // Check whether this channel is in this SubBand
       if ((*it)->BelongsToSubBand (logicalChannel->GetFrequency ()))
         {
+
           return (*it)->GetMaxTxPowerDbm ();
         }
     }

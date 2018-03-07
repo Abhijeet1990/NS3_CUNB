@@ -1,5 +1,5 @@
-#include "ns3/OTR_Helper.h"
-#include "ns3/one-time-reporting.h"
+#include "ns3/Hello_helper.h"
+#include "ns3/hello-sender.h"
 #include "ns3/double.h"
 #include "ns3/string.h"
 #include "ns3/trace-source-accessor.h"
@@ -8,44 +8,44 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("OTRHelper");
+NS_LOG_COMPONENT_DEFINE ("HelloHelper");
 
-OTRHelper::OTRHelper ()
+HelloHelper::HelloHelper ()
 {
-  m_factory.SetTypeId ("ns3::OneTimeReporting");
+  m_factory.SetTypeId ("ns3::HelloSender");
 }
 
-OTRHelper::~OTRHelper ()
+HelloHelper::~HelloHelper ()
 {
 }
 
 void
-OTRHelper::SetSendTime (Time sendTime)
+HelloHelper::SetSendTime (Time sendTime)
 {
   m_sendTime = sendTime;
 }
 
 void
-OTRHelper::SetMac(Ptr<MSCunbMac> mac)
+HelloHelper::SetMac(Ptr<MSCunbMac> mac)
 {
 	m_mac = mac;
 }
 
 void
-OTRHelper::SetAttribute (std::string name,
+HelloHelper::SetAttribute (std::string name,
                                    const AttributeValue &value)
 {
   m_factory.Set (name, value);
 }
 
 ApplicationContainer
-OTRHelper::Install (Ptr<Node> node) const
+HelloHelper::Install (Ptr<Node> node) const
 {
   return ApplicationContainer (InstallPriv (node));
 }
 
 ApplicationContainer
-OTRHelper::Install (NodeContainer c) const
+HelloHelper::Install (NodeContainer c) const
 {
   ApplicationContainer apps;
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
@@ -57,12 +57,12 @@ OTRHelper::Install (NodeContainer c) const
 }
 
 Ptr<Application>
-OTRHelper::InstallPriv (Ptr<Node> node) const
+HelloHelper::InstallPriv (Ptr<Node> node) const
 {
   NS_LOG_FUNCTION (this << node);
 
-  Ptr<OneTimeReporting> app = m_factory.Create<OneTimeReporting> ();
-  m_mac->SetOneTimeReporting(app);
+  Ptr<HelloSender> app = m_factory.Create<HelloSender> ();
+  m_mac->SetHelloSender(app);
   app->SetSendTime (m_sendTime);
   app->SetNode (node);
   node->AddApplication (app);

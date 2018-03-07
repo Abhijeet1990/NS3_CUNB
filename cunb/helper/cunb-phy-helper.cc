@@ -56,25 +56,45 @@ CunbPhyHelper::Create (Ptr<Node> node, Ptr<NetDevice> device) const
 
       // For now, assume that the PHY will listen to the default EU channels
       // with this ReceivePath configuration:
-      // 3 ReceivePaths on 868.1
-      // 3 ReceivePaths on 868.3
-      // 2 ReceivePaths on 868.5
+
 
       // We expect that MacHelper instances will overwrite this setting if the
       // device will operate in a different region
       std::vector<double> frequencies;
-      frequencies.push_back (868.1);
-      frequencies.push_back (868.3);
-      frequencies.push_back (868.5);
+
+      // Considering 180 KHz as the system bandwidth after allocating 20 KHz to Guard band
+      // For the uplink we have 250 bps with D-BPSK we need at least 500 Hz for each micro channel
+      // Hence we can have 180 KHz / 500 Hz i.e. 360 micro channels
+
+      // For the downlink data rate is 600 bps . If we use the same system bandwidth we would require
+      // 180 KHz/ 1200 Hz i.e. 150 micro channels.
+
+      // So taking the minimum for both uplink and downlink we consider 150 micro channels
+      double end_freq = 868.3;
+      double start_freq = 868.1;
+      uint8_t microchannels = 150;
+
+      // create micro channels
+      double step_size = (end_freq - start_freq)/microchannels;
+      for (uint8_t i = 0; i < microchannels;i++)
+      {
+    	  end_freq = start_freq + step_size;
+    	  double center_freq = (start_freq + end_freq)/2;
+    	  //NS_LOG_INFO("Center freq "<< center_freq);
+    	  frequencies.push_back(center_freq);
+    	  start_freq = start_freq + step_size;
+
+      }
 
       std::vector<double>::iterator it = frequencies.begin ();
 
       int receptionPaths = 0;
-      int maxReceptionPaths = 8;
+      int maxReceptionPaths = microchannels;
       while (receptionPaths < maxReceptionPaths)
         {
           if (it == frequencies.end ())
             it = frequencies.begin ();
+          NS_LOG_INFO("Center freq "<< *it);
           phy->GetObject<EnbCunbPhy> ()->AddReceptionPath (*it);
           ++it;
           receptionPaths++;

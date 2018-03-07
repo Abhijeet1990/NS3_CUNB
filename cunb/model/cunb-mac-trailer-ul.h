@@ -89,6 +89,8 @@ public:
 
   bool CheckAuthUl (Ptr<const Packet> p);
 
+  uint16_t GenerateHashUl (uint8_t *data, int length);
+
 
 private:
   /**

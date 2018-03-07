@@ -17,12 +17,12 @@ CunbBeaconHeader::~CunbBeaconHeader ()
 }
 
 void
-CunbBeaconHeader::SetData (uint64_t data)
+CunbBeaconHeader::SetData (double data)
 {
   m_data = data;
 }
 
-uint64_t
+double
 CunbBeaconHeader::GetData (void)
 {
   return m_data;

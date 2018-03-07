@@ -52,7 +52,7 @@ BeaconSender::SendPacket (void)
   NS_LOG_FUNCTION (this);
 
   // Create and send a new packet
-  Ptr<Packet> beaconPacket = Create<Packet>(10);
+  Ptr<Packet> beaconPacket = Create<Packet>(reinterpret_cast<const uint8_t*> ("hello"),10);
 
   m_mac->SendBeacon(beaconPacket);
 }

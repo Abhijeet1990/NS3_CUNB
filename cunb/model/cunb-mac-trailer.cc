@@ -63,7 +63,7 @@ CunbMacTrailer::Serialize (Buffer::Iterator start) const
   start.WriteU16(m_auth);
   start.WriteU16(m_ecc);
   start.WriteU16 (m_fcs);
-  std::cout << "start at serialize: "<< m_fcs<<std::endl;
+  //std::cout << "start at serialize: "<< m_fcs<<std::endl;
 }
 
 uint32_t
@@ -74,7 +74,7 @@ CunbMacTrailer::Deserialize (Buffer::Iterator start)
   m_auth = start.ReadU16 ();
   m_ecc = start.ReadU16();
   m_fcs = start.ReadU16();
-  std::cout<<"start at deserialize: "<< m_fcs <<std::endl;
+  //std::cout<<"start at deserialize: "<< m_fcs <<std::endl;
   return CUNB_MAC_FCS_LENGTH + CUNB_MAC_ECC_LENGTH + CUNB_MAC_AUTH_LENGTH;
 }
 
@@ -96,10 +96,23 @@ CunbMacTrailer::SetFcs (Ptr<const Packet> p)
 
       //m_fcs = GenerateCrc8 (serial_packet, size);
       m_fcs = GenerateCrc16 (serial_packet, size);
-      std::cout << "Set crc: "<< m_fcs;
+      //std::cout << "Set crc: "<< m_fcs;
       delete[] serial_packet;
     }
 }
+
+CunbMacHeaderUl
+CunbMacTrailer::GetMacHeader(void)
+{
+	return m_macHdr;
+}
+
+void
+CunbMacTrailer::SetMacHeader(CunbMacHeaderUl macHdr)
+{
+	m_macHdr = macHdr;
+}
+
 
 /* Be sure to have removed the trailer and only the trailer
  * from the packet before to use CheckFcs */
@@ -121,7 +134,7 @@ CunbMacTrailer::CheckFcs (Ptr<const Packet> p)
       //checkFcs = GenerateCrc8 (serial_packet, size);
       checkFcs = GenerateCrc16 (serial_packet, size);
       delete[] serial_packet;
-      std::cout<<" checkFcs: "<< checkFcs << "GetFcs(): "<<m_fcs<<std::endl;
+      //std::cout<<" checkFcs: "<< checkFcs << "GetFcs(): "<<m_fcs<<std::endl;
       return (checkFcs == GetFcs ());
     }
 }
@@ -152,8 +165,11 @@ CunbMacTrailer::SetAuth (Ptr<const Packet> p)
 	uint8_t *serial_packet = new uint8_t[size];
 
 	p->CopyData (serial_packet, size);
-	m_auth = GenerateHash (serial_packet, size);
-	std::cout << "Set auth: "<< m_auth;
+
+	//m_auth = GenerateHash (serial_packet, size);
+	m_auth = GenerateHashWithSeqIdent(serial_packet, size,m_macHdr.GetIdent(),m_macHdr.GetSeqCnt());
+	//m_auth = GenerateHashWithSeqIdent(serial_packet, size,m_ident,m_seq_cnt);
+	//std::cout << "Set auth: "<< m_auth;
 	delete[] serial_packet;
 
 }
@@ -166,9 +182,47 @@ bool CunbMacTrailer::CheckAuth (Ptr<const Packet> p)
 
 	p->CopyData (serial_packet, size);
 
-	checkAuth = GenerateHash(serial_packet, size);
+	//checkAuth = GenerateHash(serial_packet, size);
+	checkAuth = GenerateHashWithSeqIdent(serial_packet, size,m_macHdr.GetIdent(),m_macHdr.GetSeqCnt());
+	//checkAuth = GenerateHashWithSeqIdent(serial_packet, size,m_ident,m_seq_cnt);
+
 	delete[] serial_packet;
-	std::cout<<" checkAuth: "<< checkAuth << "GetAuth(): "<< m_auth <<std::endl;
+	//std::cout<<" checkAuth: "<< checkAuth << "GetAuth(): "<< m_auth <<std::endl;
+	return (checkAuth == GetAuth());
+
+}
+
+void
+CunbMacTrailer::SetAuthDL (Ptr<const Packet> p, uint8_t seqCnt, uint16_t ident)
+{
+	// Implementation of SHA-1 Hash
+
+	// as the Hash returns 128 bits, we use only the last 16 bits
+	uint16_t size = p->GetSize ();
+	uint8_t *serial_packet = new uint8_t[size];
+
+	p->CopyData (serial_packet, size);
+
+	//m_auth = GenerateHash (serial_packet, size);
+	m_auth = GenerateHashWithSeqIdent(serial_packet, size, ident, seqCnt);
+	//std::cout << "Set auth DL: "<< m_auth;
+	delete[] serial_packet;
+
+}
+
+bool CunbMacTrailer::CheckAuthDL (Ptr<const Packet> p, uint8_t seqCnt, uint16_t ident)
+{
+	uint16_t checkAuth;
+	uint16_t size = p->GetSize ();
+	uint8_t *serial_packet = new uint8_t[size];
+
+	p->CopyData (serial_packet, size);
+
+	//checkAuth = GenerateHash(serial_packet, size);
+	checkAuth = GenerateHashWithSeqIdent(serial_packet, size, ident, seqCnt);
+
+	delete[] serial_packet;
+	//std::cout<<" checkAuth DL: "<< checkAuth << "GetAuth() DL: "<< m_auth <<std::endl;
 	return (checkAuth == GetAuth());
 
 }
@@ -230,7 +284,7 @@ CunbMacTrailer::GenerateCrc16 (uint8_t *data, int length)
       accumulator ^= (accumulator & 0xff00) >> 5;
       ++data;
     }
-  std::cout << "CRC: "<<accumulator;
+  //std::cout << "CRC: "<<accumulator;
   return accumulator;
 }
 
@@ -247,8 +301,37 @@ CunbMacTrailer::GenerateHash(uint8_t* data, int length)
 	CryptoPP::SHA1 sha1;
 	std::string hash_sha = "";
 	CryptoPP::StringSource(store_data, true, new CryptoPP::HashFilter(sha1, new CryptoPP::HexEncoder(new CryptoPP::StringSink(hash_sha))));
-	uint16_t hash = stoi(hash_sha);
+	//std::cout<< "Hash : " << hash_sha<<std::endl;
+	//uint16_t hash = stoi(hash_sha);
+	std::string subline = hash_sha.substr(hash_sha.length()-4,hash_sha.length());
+    uint16_t hash = (int)strtol(subline.c_str(), 0, 16);
 	return hash;
 
 }
+
+uint16_t
+CunbMacTrailer::GenerateHashWithSeqIdent(uint8_t* data, int length, uint16_t ident, uint8_t seq)
+{
+	std::string store_data = "";
+	for (int i = 0; i < length; ++i)
+	{
+	    store_data+= *data;
+	    ++data;
+	}
+
+	store_data += std::to_string(ident);
+	store_data += std::to_string(seq);
+    //std::cout<< "ident_inside hash "<<std::to_string(ident)<< "seq inside hash "<<std::to_string(seq)<<std::endl;
+	CryptoPP::SHA1 sha1;
+	std::string hash_sha = "";
+	CryptoPP::StringSource(store_data, true, new CryptoPP::HashFilter(sha1, new CryptoPP::HexEncoder(new CryptoPP::StringSink(hash_sha))));
+	//std::cout<< "Hash : " << hash_sha<<std::endl;
+	//uint16_t hash = stoi(hash_sha);
+	std::string subline = hash_sha.substr(hash_sha.length()-4,hash_sha.length());
+    uint16_t hash = (int)strtol(subline.c_str(), 0, 16);
+	return hash;
+
+}
+
+
 } //namespace ns3

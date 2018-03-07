@@ -39,7 +39,7 @@ private:
 };
 
 /**
-  * Class representing the Network Address component of a LoraDeviceAddress (25
+  * Class representing the Network Address component of a CunbDeviceAddress (25
   * bits)
   */
 class NwkAddr

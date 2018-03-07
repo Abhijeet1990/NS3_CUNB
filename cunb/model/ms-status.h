@@ -114,6 +114,7 @@ public:
    */
   bool HasReply (void);
 
+
   /**
    * Return this device's next downlink packet.
    *
@@ -121,7 +122,7 @@ public:
    *
    * \return The full packet for reply.
    */
-  Ptr<Packet> GetReplyPacket (void);
+  Ptr<Packet> GetReplyPacket (uint8_t seqNo, uint16_t ident);
 
   /**
    * Set the first window frequency of this device.
@@ -182,6 +183,7 @@ private:
   std::map<Address, double> m_enbs;   //!< The enbs that received a
                                           //!packet from the device represented
                                           //!by this MSStatus
+
 
   struct Reply m_reply; //!< Structure containing the next reply meant for this
                         //!device

@@ -37,11 +37,6 @@ public:
    */
   enum State
   {
-    /**
-     * The PHY layer is sleeping.
-     * During sleep, the device is not listening for incoming messages.
-     */
-    SLEEP,
 
     /**
      * The PHY layer is in STANDBY.
@@ -82,6 +77,9 @@ public:
   // Implementation of CunbPhy's pure virtual functions
   virtual void Send (Ptr<Packet> packet, CunbTxParameters txParams,
                      double frequencyMHz, double txPowerDbm);
+
+  // check the APDU type
+  bool checkIfAck(Ptr<Packet> packet);
 
   // Implementation of CunbPhy's pure virtual functions
   virtual bool IsOnFrequency (double frequencyMHz);
@@ -126,7 +124,7 @@ public:
   /**
    * Switch to the SLEEP state.
    */
-  void SwitchToSleep (void);
+  //void SwitchToSleep (void);
 
 private:
   /**
@@ -146,6 +144,8 @@ private:
    * listen on.
    */
   TracedCallback<Ptr<const Packet>, uint32_t> m_wrongFrequency;
+
+  TracedCallback<Ptr<const Packet>> m_phyRxBeginTrace;
 
   TracedValue<State> m_state; //!< The state this PHY is currently in.
 

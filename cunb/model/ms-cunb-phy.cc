@@ -4,6 +4,8 @@
 #include "ns3/cunb-tag.h"
 #include "ns3/cunb-frame-header.h"
 #include "ns3/log.h"
+#include "ns3/app-layer-header.h"
+#include "ns3/new-cosem-header.h"
 
 namespace ns3 {
 
@@ -35,8 +37,8 @@ MSCunbPhy::GetTypeId (void)
 // Initialize the device with some common settings.
 // These will then be changed by helpers.
 MSCunbPhy::MSCunbPhy () :
-  m_state (SLEEP),
-  m_frequency (868.1),
+  m_state (STANDBY),
+  m_frequency (868.3),
   m_beacon_frequency(868.5)
 {
 }
@@ -47,21 +49,21 @@ MSCunbPhy::~MSCunbPhy()
 
 // Set a fixed sensitivity of MS
 
-const double MSCunbPhy::sensitivity = -104; //https://sites.google.com/site/lteencyclopedia/lte-radio-link-budgeting-and-rf-planning
-
+//const double MSCunbPhy::sensitivity = -104; //https://sites.google.com/site/lteencyclopedia/lte-radio-link-budgeting-and-rf-planning
+const double MSCunbPhy::sensitivity = -140;
 
 void
 MSCunbPhy::Send (Ptr<Packet> packet, CunbTxParameters txParams,
                         double frequencyMHz, double txPowerDbm)
 {
-  NS_LOG_FUNCTION (this << packet << txParams << frequencyMHz << txPowerDbm);
+  //NS_LOG_FUNCTION (this << packet << txParams << frequencyMHz << txPowerDbm);
 
-  NS_LOG_INFO ("Current state: " << m_state);
+  //NS_LOG_INFO ("Current state: " << m_state);
 
   // We must be either in STANDBY or SLEEP mode to send a packet
-  if (m_state != STANDBY && m_state != SLEEP)
+  if (m_state != STANDBY)
     {
-      NS_LOG_INFO ("Cannot send because device is currently not in STANDBY or SLEEP mode");
+      //NS_LOG_INFO ("Cannot send because device is currently not in STANDBY mode");
       return;
     }
 
@@ -71,13 +73,19 @@ MSCunbPhy::Send (Ptr<Packet> packet, CunbTxParameters txParams,
   // Compute the duration of the transmission
   Time duration = GetOnAirTime (packet, txParams,MS);
 
+
+  Ptr<CunbInterferenceHelper::Event> event;
+  event = m_interference.Add (duration, txPowerDbm, packet, frequencyMHz);
+
+
+  //NS_LOG_INFO(" Get on Air Time ****** "<< duration);
   // Tag the packet with information
   CunbTag tag;
   packet->RemovePacketTag (tag);
   packet->AddPacketTag (tag);
 
   // Send the packet over the channel
-  NS_LOG_INFO ("Sending the packet in the channel");
+  NS_LOG_INFO ("Sending the packet with Frequency "<<frequencyMHz);
   m_channel->Send (this, packet, txPowerDbm, txParams, duration, frequencyMHz);
 
   // Schedule the switch back to STANDBY mode.
@@ -99,6 +107,7 @@ MSCunbPhy::Send (Ptr<Packet> packet, CunbTxParameters txParams,
   // Call the trace source
   if (m_device)
     {
+	  //NS_LOG_INFO ("Sending packet succesfully ");
       m_startSending (packet, m_device->GetNode ()->GetId ());
     }
   else
@@ -112,8 +121,7 @@ MSCunbPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
                                 Time duration, double frequencyMHz)
 {
 
-  NS_LOG_FUNCTION (this << packet << rxPowerDbm  << duration <<
-                   frequencyMHz);
+  //NS_LOG_FUNCTION (this << packet << rxPowerDbm  << duration <<frequencyMHz);
 
   // Notify the CunbInterferenceHelper of the impinging signal, and remember
   // the event it creates. This will be used then to correctly handle the end
@@ -135,19 +143,14 @@ MSCunbPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
     // In the SLEEP, TX and RX cases we cannot receive the packet: we only add
     // it to the list of interferers and do not schedule an EndReceive event for
     // it.
-    case SLEEP:
-      {
-        NS_LOG_INFO ("Dropping packet because device is in SLEEP state");
-        break;
-      }
     case TX:
       {
-        NS_LOG_INFO ("Dropping packet because device is in TX state");
+        //NS_LOG_INFO ("Dropping packet because device is in TX state");
         break;
       }
     case RX:
       {
-        NS_LOG_INFO ("Dropping packet because device is already in RX state");
+        //NS_LOG_INFO ("Dropping packet because device is already in RX state");
         break;
       }
     // If we are in STANDBY mode, we can potentially lock on the currently
@@ -170,15 +173,15 @@ MSCunbPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
         pcopy->RemoveHeader(frameHdr);
         uint32_t addr = frameHdr.GetAddress().Get();
 
-        NS_LOG_INFO("Broadcast Address"<<addr);
+        //NS_LOG_INFO("Broadcast Address"<<addr);
 
         // Check frequency
         //////////////////
+
+        //NS_LOG_INFO("On frequency "<< frequencyMHz);
         if (!IsOnFrequency (frequencyMHz) && addr != 4294967295)
           {
-            NS_LOG_INFO ("Packet lost because it's on frequency " <<
-                         frequencyMHz << " MHz and we are listening at " <<
-                         m_frequency << " MHz");
+            //NS_LOG_INFO ("Packet lost because it's on frequency " <<frequencyMHz << " MHz and we are listening at " <<m_frequency << " MHz");
 
             // Fire the trace source for this event.
             if (m_device)
@@ -195,9 +198,7 @@ MSCunbPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
 
         if(!IsOnBeaconFrequency (frequencyMHz) && addr == 4294967295)
         {
-          NS_LOG_INFO ("Packet lost because it's on frequency " <<
-                       frequencyMHz << " MHz and we are listening at " <<
-                       m_beacon_frequency << " MHz");
+          //NS_LOG_INFO ("Packet lost because it's on beacon frequency " <<frequencyMHz << " MHz and we are listening at " <<m_beacon_frequency << " MHz");
 
           // Fire the trace source for this event.
           if (m_device)
@@ -216,8 +217,7 @@ MSCunbPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
         ////////////////////
         if (rxPowerDbm < sensitivity)
           {
-            NS_LOG_INFO ("Dropping packet reception of packet because under the sensitivity of " <<
-                         sensitivity << " dBm");
+            //NS_LOG_INFO ("Dropping packet reception of packet because under the sensitivity of " <<sensitivity << " dBm");
 
             // Fire the trace source for this event.
             if (m_device)
@@ -241,8 +241,7 @@ MSCunbPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
             SwitchToRx ();
 
             // Schedule the end of the reception of the packet
-            NS_LOG_INFO ("Scheduling reception of a packet. End in " <<
-                         duration.GetSeconds () << " seconds");
+            //NS_LOG_INFO ("Scheduling reception of a packet. End in " <<duration.GetSeconds () << " seconds");
 
             Simulator::Schedule (duration, &CunbPhy::EndReceive, this, packet,
                                  event);
@@ -258,7 +257,10 @@ void
 MSCunbPhy::EndReceive (Ptr<Packet> packet,
                               Ptr<CunbInterferenceHelper::Event> event)
 {
-  NS_LOG_FUNCTION (this << packet << event);
+  //NS_LOG_FUNCTION (this << packet << event);
+
+  // Check APDU type
+  bool isAck = checkIfAck(packet);
 
   // Fire the trace source
   m_phyRxEndTrace (packet);
@@ -284,7 +286,7 @@ MSCunbPhy::EndReceive (Ptr<Packet> packet,
     }
   else
     {
-      NS_LOG_INFO ("Packet received correctly");
+      //NS_LOG_INFO ("Packet received correctly");
 
       if (m_device)
         {
@@ -300,7 +302,6 @@ MSCunbPhy::EndReceive (Ptr<Packet> packet,
       pcopy->RemoveHeader(frameHdr);
       uint32_t addr = frameHdr.GetAddress().Get();
 
-      NS_LOG_INFO("Broadcast Address"<<addr);
       // Only keep analyzing the packet if it's downlink
       if (addr == 4294967295 && !m_rxOkCallbackBeacon.IsNull ())
          {
@@ -308,18 +309,34 @@ MSCunbPhy::EndReceive (Ptr<Packet> packet,
     	  SwitchToStandby ();
     	  return;
          }
+
+      else if (!m_rxReOkCallback.IsNull () && !isAck)
+        {
+    	  m_rxReOkCallback(packet);
+          return;
+        }
       // If there is one, perform the callback to inform the upper layer
-      else if (!m_rxOkCallback.IsNull ())
+      else if (!m_rxOkCallback.IsNull () && isAck)
         {
           m_rxOkCallback (packet);
           SwitchToStandby ();
           return;
-
         }
 
     }
   // Automatically switch to Standby in either case
   SwitchToStandby ();
+}
+
+
+// Check APDU Type
+bool
+MSCunbPhy::checkIfAck(Ptr<Packet> packet)
+{
+	Ptr<Packet> pCopy = packet->Copy();
+
+	if(pCopy->GetSize() > 25) return false;
+	else return true;
 }
 
 bool
@@ -361,7 +378,7 @@ MSCunbPhy::SetBeaconFrequency (double frequencyMHz)
 void
 MSCunbPhy::SwitchToStandby (void)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 
   m_state = STANDBY;
 }
@@ -369,7 +386,7 @@ MSCunbPhy::SwitchToStandby (void)
 void
 MSCunbPhy::SwitchToRx (void)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 
   NS_ASSERT (m_state == STANDBY);
 
@@ -379,27 +396,17 @@ MSCunbPhy::SwitchToRx (void)
 void
 MSCunbPhy::SwitchToTx (void)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 
   NS_ASSERT (m_state != RX);
 
   m_state = TX;
 }
 
-void
-MSCunbPhy::SwitchToSleep (void)
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  NS_ASSERT (m_state == STANDBY);
-
-  m_state = SLEEP;
-}
-
 MSCunbPhy::State
 MSCunbPhy::GetState (void)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 
   return m_state;
 }

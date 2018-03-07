@@ -6,7 +6,7 @@ namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("AppLayerHeader");
 
-// pType = 0 (HH,KA) 1(HH,N) 2(HH,A) 3(C,KA) 4(C,N) 5(C,A)
+// pType = 0 (HH,KA) 1(HH,N) 2(HH,A) 3(C,KA) 4(C,N) 5(C,A) , 10(Hello packet)
 // A: Alarm, KA: KeepAlive, N: Normal, HH: Household, C: Commercial
 // Initialization list
 AppLayerHeader::AppLayerHeader () :

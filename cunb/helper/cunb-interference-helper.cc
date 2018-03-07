@@ -98,46 +98,17 @@ CunbInterferenceHelper::GetTypeId (void)
 
 CunbInterferenceHelper::CunbInterferenceHelper ()
 {
-  NS_LOG_FUNCTION (this);
+  //NS_LOG_FUNCTION (this);
 }
 
 CunbInterferenceHelper::~CunbInterferenceHelper ()
 {
-  NS_LOG_FUNCTION (this);
+  //NS_LOG_FUNCTION (this);
 }
-/*
-// This collision matrix can be used for comparisons with the performance of Aloha
-// systems, where collisions imply the loss of both packets.
-// double inf = std::numeric_limits<double>::max();
-// const double LoraInterferenceHelper::collisionSnir[6][6] =
-// {
-// //   7   8   9  10  11  12
-// {inf, inf, inf, inf, inf, inf},  // SF7
-// {inf, inf, inf, inf, inf, inf},  // SF8
-// {inf, inf, inf, inf, inf, inf},  // SF9
-// {inf, inf, inf, inf, inf, inf},  // SF10
-// {inf, inf, inf, inf, inf, inf},  // SF11
-// {inf, inf, inf, inf, inf, inf}   // SF12
-// };
 
-// LoRa Collision Matrix (Goursaud)
-// Values are inverted w.r.t. the paper since here we interpret this as an
-// _isolation_ matrix instead of a cochannel _rejection_ matrix like in
-// Goursaud's paper.
-const double CunbInterferenceHelper::collisionSnir[6][6] =
-{
-// SF7  SF8  SF9  SF10 SF11 SF12
-  {  6, -16, -18, -19, -19, -20},  // SF7
-  {-24,   6, -20, -22, -22, -22},  // SF8
-  {-27, -27,   6, -23, -25, -25},  // SF9
-  {-30, -30, -30,   6, -26, -28},  // SF10
-  {-33, -33, -33, -33,   6, -29},  // SF11
-  {-36, -36, -36, -36, -36,   6}   // SF12
-};
-*/
 const double CunbInterferenceHelper::collisionSnir = 6;
 
-Time CunbInterferenceHelper::oldEventThreshold = Seconds (2);
+Time CunbInterferenceHelper::oldEventThreshold = Seconds (5);
 
 Ptr<CunbInterferenceHelper::Event>
 CunbInterferenceHelper::Add (Time duration, double rxPower,
@@ -145,7 +116,7 @@ CunbInterferenceHelper::Add (Time duration, double rxPower,
                              double frequencyMHz)
 {
 
-  NS_LOG_FUNCTION (this << duration.GetSeconds () << rxPower << packet << frequencyMHz);
+  //NS_LOG_FUNCTION (this << duration.GetSeconds () << rxPower << packet << frequencyMHz);
 
   // Create an event based on the parameters
   Ptr<CunbInterferenceHelper::Event> event =
@@ -167,7 +138,7 @@ CunbInterferenceHelper::Add (Time duration, double rxPower,
 void
 CunbInterferenceHelper::CleanOldEvents (void)
 {
-  NS_LOG_FUNCTION (this);
+  //NS_LOG_FUNCTION (this);
 
   // Cycle the events, and clean up if an event is old.
   for (auto it = m_events.begin (); it != m_events.end ();)
@@ -189,7 +160,7 @@ CunbInterferenceHelper::GetInterferers ()
 void
 CunbInterferenceHelper::PrintEvents (std::ostream &stream)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 
   stream << "Currently registered events:" << std::endl;
 
@@ -204,9 +175,9 @@ bool
 CunbInterferenceHelper::IsDestroyedByInterference
   (Ptr<CunbInterferenceHelper::Event> event)
 {
-  NS_LOG_FUNCTION (this << event);
+  //NS_LOG_FUNCTION (this << event);
 
-  NS_LOG_INFO ("Current number of events in CunbInterferenceHelper: " << m_events.size ());
+  //NS_LOG_INFO ("Current number of events in CunbInterferenceHelper: " << m_events.size ());
 
   // We want to see the interference affecting this event: cycle through events
   // that overlap with this one and see whether it survives the interference or not.
@@ -218,6 +189,7 @@ CunbInterferenceHelper::IsDestroyedByInterference
   // Handy information about the time frame when the packet was received
   Time now = Simulator::Now ();
   Time duration = event->GetDuration ();
+  //NS_LOG_INFO("Current Event Duration "<<duration);
   Time packetStartTime = now - duration;
   Time packetEndTime = now;
 
@@ -235,26 +207,27 @@ CunbInterferenceHelper::IsDestroyedByInterference
       // event if it's the same that we want to analyze.
       if (!(interferer->GetFrequency () == frequency) || interferer == event)
         {
-          NS_LOG_DEBUG ("Different channel");
+          //NS_LOG_DEBUG ("Different channel");
           it++;
           continue;   // Continues from the first line inside the for cycle
         }
 
-      NS_LOG_DEBUG ("Interferer on same channel");
+      //NS_LOG_DEBUG ("Interferer on same channel");
 
       // Gather information about this interferer
       double interfererPower = interferer->GetRxPowerdBm ();
       Time interfererStartTime = interferer->GetStartTime ();
       Time interfererEndTime = interferer->GetEndTime ();
 
-      NS_LOG_INFO ("Found an interferer:  power = " << interfererPower
-                                                << ", start time = " << interfererStartTime
-                                                << ", end time = " << interfererEndTime);
+      //NS_LOG_INFO ("Found an interferer:  power = " << interfererPower<< ", start time = " << interfererStartTime<< ", end time = " << interfererEndTime<<", start time current event="<<event->GetStartTime()<<", end time current event="<<event->GetEndTime());
 
       // Compute the fraction of time the two events are overlapping
       Time overlap = GetOverlapTime (event, interferer);
 
-      NS_LOG_DEBUG ("The two events overlap for " << overlap.GetSeconds () << " s.");
+      //temporary checking
+      if (overlap.GetSeconds() > 0.0) return true;
+
+      //NS_LOG_DEBUG ("The two events overlap for " << overlap.GetSeconds () << " s.");
 
       // Compute the equivalent energy of the interference
       // Power [mW] = 10^(Power[dBm]/10)
@@ -263,31 +236,33 @@ CunbInterferenceHelper::IsDestroyedByInterference
       // Energy [J] = Time [s] * Power [W]
       double interferenceEnergy = overlap.GetSeconds () * interfererPowerW;
 
-      NS_LOG_DEBUG ("Interferer power in W: " << interfererPowerW);
-      NS_LOG_DEBUG ("Interference energy: " << interferenceEnergy);
+      //NS_LOG_DEBUG ("Interferer power in W: " << interfererPowerW);
+      //NS_LOG_DEBUG ("Interference energy: " << interferenceEnergy);
 
       double signalPowerW = pow (10, rxPowerDbm/10) / 1000;
       double signalEnergy = duration.GetSeconds () * signalPowerW;
-      NS_LOG_DEBUG ("Signal power in W: " << signalPowerW);
-      NS_LOG_DEBUG ("Signal energy: " << signalEnergy);
+      //NS_LOG_DEBUG ("Signal power in W: " << signalPowerW);
+      //NS_LOG_DEBUG ("Signal energy: " << signalEnergy);
 
       double snir = 10*log10 (signalEnergy/interferenceEnergy);
-      NS_LOG_DEBUG ("The current SNIR is " << snir << " dB");
+      //NS_LOG_DEBUG ("The current SNIR is " << snir << " dB");
 
       // Here currently we are using the first value of the matrix. The collision SNIR value is fixed for the receiver.
 
       double snirIsolation = collisionSnir;
-      NS_LOG_DEBUG ("The needed isolation to survive is "
-                          << snirIsolation << " dB");
+     // NS_LOG_DEBUG ("The needed isolation to survive is "<< snirIsolation << " dB");
 
       if (snir >= snirIsolation)
               {
                 // Move on and check the rest of the interferers
-                NS_LOG_DEBUG ("Packet survived interference");
+                //NS_LOG_DEBUG ("Packet survived interference");
               }
             else
               {
-                NS_LOG_DEBUG ("Packet destroyed by interference");
+            	NS_LOG_INFO ("Found an interferer:  power = " << interfererPower<< ", start time = " << interfererStartTime<< ", end time = " << interfererEndTime<<", start time current event="<<event->GetStartTime()<<", end time current event="<<event->GetEndTime());
+                NS_LOG_DEBUG ("Packet destroyed by interference with frequency = "<<interferer->GetFrequency());
+                NS_LOG_DEBUG ("The two events overlap for " << overlap.GetSeconds () << " s.");
+                NS_LOG_DEBUG ("The current SNIR is " << snir << " dB");
 
                 return true;
               }
@@ -295,7 +270,7 @@ CunbInterferenceHelper::IsDestroyedByInterference
       it++;
     }
   // If we get to here, it means that the packet survived all interference
-  NS_LOG_DEBUG ("Packet survived all interference");
+  //NS_LOG_DEBUG ("Packet survived all interference");
 
   // Since the packet was not destroyed, we return 0.
   return false;
@@ -304,7 +279,7 @@ CunbInterferenceHelper::IsDestroyedByInterference
 void
 CunbInterferenceHelper::ClearAllEvents (void)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 
   m_events.clear ();
 }
@@ -313,7 +288,7 @@ Time
 CunbInterferenceHelper::GetOverlapTime (Ptr<CunbInterferenceHelper::Event> event1,
                                         Ptr<CunbInterferenceHelper::Event> event2)
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 
   // Create the value we will return later
   Time overlap;

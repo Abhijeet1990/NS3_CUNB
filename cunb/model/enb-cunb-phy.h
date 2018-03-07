@@ -17,12 +17,6 @@ class CunbChannel;
 /**
  * Class modeling a eNB Physical Layer
  *
- * This class models the behaviour of the hardware in eNBs. These
- * chips are characterized by the presence of 8 receive paths, or parallel
- * receivers, which can be employed to listen to different channels
- * simultaneously. This characteristic of the chip is modeled using the
- * ReceivePath class, which describes a single parallel receiver. EnbCunbPhy
- * essentially holds and manages a collection of these objects.
  */
 class EnbCunbPhy : public CunbPhy
 {

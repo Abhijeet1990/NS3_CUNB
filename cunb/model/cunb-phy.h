@@ -100,6 +100,8 @@ public:
      */
     typedef Callback<void, Ptr<const Packet> > RxOkCallbackBeacon;
 
+    typedef Callback<void, Ptr<const Packet> > RxReOkCallback;
+
   /**
    * Type definition for a callback to call when a packet has finished sending.
    *
@@ -189,6 +191,8 @@ public:
      * notified after the successful reception of a packet.
      */
     void SetReceiveOkBeaconCallback (RxOkCallbackBeacon callback);
+
+    void SetReceiveRequestOkCallback (RxReOkCallback callback);
 
   /**
    * Set the callback to call after transmission of a packet.
@@ -329,7 +333,7 @@ protected:
     RxOkCallbackBeacon m_rxOkCallbackBeacon;
 
 
-
+    RxReOkCallback m_rxReOkCallback;
 
 
   /**

@@ -1,5 +1,5 @@
-#ifndef ONE_TIME_REPORTING_H
-#define ONE_TIME_REPORTING_H
+#ifndef HELLO_SENDER_H
+#define HELLO_SENDER_H
 
 #include "ns3/application.h"
 #include "ns3/nstime.h"
@@ -8,21 +8,19 @@
 
 namespace ns3 {
 
-class OneTimeReporting : public Application {
+class HelloSender : public Application {
 public:
 
-  OneTimeReporting ();
-  OneTimeReporting (Time sendTime);
-  ~OneTimeReporting ();
+  HelloSender ();
+  HelloSender (Time sendTime);
+  ~HelloSender ();
 
   static TypeId GetTypeId (void);
-
-  void ReceiveRequest(Ptr<Packet> packet);
 
   /**
    * Send a packet using the CunbNetDevice's Send method.
    */
-  void SendPacket (uint8_t pType);
+  void SendPacket (void);
 
   /**
    * Set the time at which this app will send a packet.
@@ -58,9 +56,8 @@ private:
    */
   Ptr<CunbMac> m_mac;
 
-  uint64_t m_req[3];
 };
 
 } //namespace ns3
 
-#endif /* ONE_SHOT_APPLICATION */
+#endif /* HELLO_SENDER */

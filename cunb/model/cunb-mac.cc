@@ -22,6 +22,11 @@ CunbMac::GetTypeId (void)
                      "Trace source indicating a packet "
                      "could not be sent immediately because of duty cycle limitations",
                      MakeTraceSourceAccessor (&CunbMac::m_cannotSendBecauseDutyCycle),
+                     "ns3::Packet::TracedCallback")
+    .AddTraceSource ("StartSendingData",
+                     "Trace source indicating the MAC layer"
+                     "has begun the sending process for a packet",
+                     MakeTraceSourceAccessor (&CunbMac::m_startSending),
                      "ns3::Packet::TracedCallback");
   return tid;
 }
@@ -62,6 +67,7 @@ CunbMac::SetPhy (Ptr<CunbPhy> phy)
   // Connect the receive callbacks
   m_phy->SetReceiveOkCallback (MakeCallback (&CunbMac::Receive, this));
   m_phy->SetReceiveOkBeaconCallback (MakeCallback (&CunbMac::ReceiveBeacon, this));
+  m_phy->SetReceiveRequestOkCallback (MakeCallback (&CunbMac::ReceiveRequest, this));
   m_phy->SetTxFinishedCallback (MakeCallback (&CunbMac::TxFinished, this));
 }
 

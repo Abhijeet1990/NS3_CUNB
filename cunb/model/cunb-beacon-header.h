@@ -46,9 +46,9 @@ public:
    */
   virtual void Print (std::ostream &os) const;
 
-  void SetData(uint64_t data);
+  void SetData(double data);
 
-  uint64_t GetData(void);
+  double GetData(void);
 
   Mac48Address GetAddress();
 
@@ -105,7 +105,7 @@ private:
   uint8_t m_sysInfoCnt;
   uint8_t m_grpSeqNo;
 
-  uint64_t m_data;
+  double m_data;
   Mac48Address m_broadcastAdr;
 
 

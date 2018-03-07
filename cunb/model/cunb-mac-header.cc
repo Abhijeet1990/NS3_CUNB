@@ -172,7 +172,7 @@ CunbMacHeader::SetAckBits (uint32_t ackBits)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  m_mtype = ackBits;
+  m_ack_bits = ackBits;
 }
 
 uint32_t

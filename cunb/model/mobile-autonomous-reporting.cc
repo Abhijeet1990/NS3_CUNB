@@ -4,6 +4,10 @@
 #include "ns3/double.h"
 #include "ns3/string.h"
 #include "ns3/cunb-net-device.h"
+#include "ns3/app-layer-header.h"
+#include "ns3/new-cosem-header.h"
+#include "ns3/ms-cunb-mac.h"
+#include "ns3/cunb-mac-header-ul.h"
 
 namespace ns3 {
 
@@ -32,7 +36,7 @@ MobileAutonomousReporting::GetTypeId (void)
 }
 
 MobileAutonomousReporting::MobileAutonomousReporting () :
-  m_interval (Seconds (10)),
+  m_interval (Seconds (60)),
   m_initialDelay (Seconds (1)),
   m_pktSize(49),
   m_randomPktSize (0)
@@ -68,7 +72,15 @@ MobileAutonomousReporting::SetInitialDelay (Time delay)
 }
 
 void
-MobileAutonomousReporting::SendPacket (void)
+MobileAutonomousReporting::StartMAR(Ptr<Packet> packet, double frequency)
+{
+	m_startMAREvent = Simulator::Schedule (Seconds(0.0), &MobileAutonomousReporting::SendPacket,
+			                                     this, frequency);
+}
+
+
+void
+MobileAutonomousReporting::SendPacket (double frequency)
 {
   NS_LOG_FUNCTION (this);
 
@@ -78,17 +90,47 @@ MobileAutonomousReporting::SendPacket (void)
   Ptr<Packet> packet;
   if (m_randomPktSize == true)
     {
-      packet = Create<Packet>(10+size);
+      packet = Create<Packet>(size);
     }
   else
     {
-      packet = Create<Packet>(10);
+      packet = Create<Packet>();
     }
+
+  uint8_t invokeIdAndPriority = 2;
+  uint32_t data = 789;
+  NewCosemGetResponseNormalHeader cosemHdr;
+  cosemHdr.SetInvokeIdAndPriority (invokeIdAndPriority);
+  cosemHdr.SetData (data);
+  cosemHdr.SetDataAccessResult (0); // Success {0}
+  packet->AddHeader (cosemHdr); // Copy the header into the packet
+
+  NewTypeAPDU typeHdr;
+  typeHdr.SetApduType ((ApduType)cosemHdr.GetIdApdu()); // Define the type of APDU
+  packet->AddHeader (typeHdr); // Copy the header into the packet
+
+  AppLayerHeader appHdr;
+  appHdr.SetPtype(1);
+  packet->AddHeader(appHdr);
+
+  // Add the UDP Wrapper Header
+  // Add Wrapper header
+  NewCosemWrapperHeader wrapperHdr;
+  uint16_t sourceWPort = 80;
+  uint16_t destWPort = 90;
+  wrapperHdr.SetSrcwPort (sourceWPort);
+  wrapperHdr.SetDstwPort (destWPort);
+  wrapperHdr.SetLength (packet->GetSize ());
+  packet->AddHeader (wrapperHdr);
+
+  m_mac->GetObject<MSCunbMac> ()->SetMType
+      (CunbMacHeaderUl::SINGLE_ACK);
+  m_mac->GetObject<MSCunbMac> ()->SetFrequencyToSend(frequency);
   m_mac->Send (packet);
 
   // Schedule the next SendPacket event
   m_sendEvent = Simulator::Schedule (m_interval, &MobileAutonomousReporting::SendPacket,
-                                     this);
+                                     this,frequency);
 
   NS_LOG_DEBUG ("Sent a packet of size " << packet->GetSize ());
 }
@@ -113,7 +155,7 @@ MobileAutonomousReporting::StartApplication (void)
   NS_LOG_DEBUG ("Starting up application with a first event with a " <<
                 m_initialDelay.GetSeconds () << " seconds delay");
   m_sendEvent = Simulator::Schedule (m_initialDelay,
-                                     &MobileAutonomousReporting::SendPacket, this);
+                                     &MobileAutonomousReporting::SendPacket, this,0.0);
   NS_LOG_DEBUG ("Event Id: " << m_sendEvent.GetUid ());
 }
 

@@ -49,6 +49,9 @@ public:
   virtual NetDeviceContainer Install (const CunbPhyHelper &phyHelper,
                                       const CunbMacHelper &macHelper,
                                       Ptr<Node> node) const;
+
+private:
+  virtual void EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename);
 };
 
 } //namespace ns3

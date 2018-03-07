@@ -26,8 +26,9 @@
 #include "ns3/channel.h"
 #include "ns3/net-device.h"
 #include "ns3/propagation-loss-model.h"
+#include "ns3/buildings-propagation-loss-model.h"
 #include "ns3/propagation-delay-model.h"
-#include "ns3/logical-lora-channel.h"
+#include "ns3/logical-cunb-channel.h"
 #include "ns3/packet.h"
 #include "ns3/nstime.h"
 
@@ -37,6 +38,7 @@ class NetDevice;
 class CunbPhy;
 struct CunbTxParameters;
 class PropagationLossModel;
+class BuildingsPropagationLossModel;
 class PropagationDelayModel;
 
 /**
@@ -78,14 +80,24 @@ public:
   virtual uint32_t GetNDevices (void) const;
   virtual Ptr<NetDevice> GetDevice (uint32_t i) const;
 
+
+
   /**
-    * Construct a CunbChannel with a loss and delay model.
-    *
-    * \param loss The loss model to associate to this channel.
-    * \param delay The delay model to associate to this channel.
-    */
-  CunbChannel (Ptr<PropagationLossModel> loss,
-               Ptr<PropagationDelayModel> delay);
+     * Construct a CunbChannel with a loss and delay model.
+     *
+     * \param loss The loss model to associate to this channel.
+     * \param delay The delay model to associate to this channel.
+     */
+   CunbChannel (Ptr<PropagationDelayModel> delay,Ptr<BuildingsPropagationLossModel> loss);
+
+   /**
+     * Construct a CunbChannel with a loss and delay model.
+     *
+     * \param loss The loss model to associate to this channel.
+     * \param delay The delay model to associate to this channel.
+     */
+   CunbChannel (Ptr<PropagationLossModel> loss,
+                Ptr<PropagationDelayModel> delay);
 
   /**
     * Connect a CunbPhy object to the CunbChannel.
@@ -147,6 +159,10 @@ public:
   double GetRxPower (double txPowerDbm, Ptr<MobilityModel> senderMobility,
                      Ptr<MobilityModel> receiverMobility) const;
 
+  double GetRxPowerWithBuildings (double txPowerDbm, Ptr<MobilityModel> senderMobility,
+                       Ptr<MobilityModel> receiverMobility) const;
+
+
 private:
   /**
     * Private method that is scheduled by CunbChannel's Send method to happen
@@ -176,6 +192,9 @@ private:
     */
   Ptr<PropagationLossModel> m_loss;
 
+  Ptr<BuildingsPropagationLossModel> m_lossBuilding;
+
+
   /**
     * Pointer to the delay model.
     */
@@ -185,6 +204,9 @@ private:
    * Callback for when a packet is being sent on the channel.
    */
   TracedCallback<Ptr<const Packet> > m_packetSent;
+
+  bool m_isUsingBuilding;
+
 
 };
 

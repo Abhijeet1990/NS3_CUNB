@@ -67,17 +67,27 @@ CunbChannel::~CunbChannel ()
   m_phyList.clear ();
 }
 
+
+
+CunbChannel::CunbChannel (Ptr<PropagationDelayModel> delay,Ptr<BuildingsPropagationLossModel> loss) :
+  m_lossBuilding (loss),
+  m_delay (delay),
+  m_isUsingBuilding(true)
+{
+}
+
 CunbChannel::CunbChannel (Ptr<PropagationLossModel> loss,
                           Ptr<PropagationDelayModel> delay) :
   m_loss (loss),
-  m_delay (delay)
+  m_delay (delay),
+  m_isUsingBuilding(false)
 {
 }
 
 void
 CunbChannel::Add (Ptr<CunbPhy> phy)
 {
-  NS_LOG_FUNCTION (this << phy);
+  //NS_LOG_FUNCTION (this << phy);
 
   // Add the new phy to the vector
   m_phyList.push_back (phy);
@@ -86,7 +96,7 @@ CunbChannel::Add (Ptr<CunbPhy> phy)
 void
 CunbChannel::Remove (Ptr<CunbPhy> phy)
 {
-  NS_LOG_FUNCTION (this << phy);
+  //NS_LOG_FUNCTION (this << phy);
 
   // Remove the phy from the vector
   m_phyList.erase (find (m_phyList.begin (), m_phyList.end (), phy));
@@ -109,19 +119,19 @@ CunbChannel::Send (Ptr< CunbPhy > sender, Ptr< Packet > packet,
                    double txPowerDbm, CunbTxParameters txParams,
                    Time duration, double frequencyMHz) const
 {
-  NS_LOG_FUNCTION (this << sender << packet << txPowerDbm << txParams <<
-                   duration << frequencyMHz);
+  NS_LOG_FUNCTION (this << sender << packet << txPowerDbm << txParams << duration << frequencyMHz);
 
   // Get the mobility model of the sender
   Ptr<MobilityModel> senderMobility = sender->GetMobility ()->GetObject<MobilityModel> ();
 
   NS_ASSERT (senderMobility != 0); // Make sure it's available
 
-  NS_LOG_INFO ("Starting cycle over all " << m_phyList.size () << " PHYs");
-  NS_LOG_INFO ("Sender mobility: " << senderMobility->GetPosition ());
+  //NS_LOG_INFO ("Starting cycle over all " << m_phyList.size () << " PHYs");
+  //NS_LOG_INFO ("Sender mobility: " << senderMobility->GetPosition ());
 
   // Cycle over all registered PHYs
   uint32_t j = 0;
+
   std::vector<Ptr<CunbPhy> >::const_iterator i;
   for (i = m_phyList.begin (); i != m_phyList.end (); i++, j++)
     {
@@ -132,15 +142,23 @@ CunbChannel::Send (Ptr< CunbPhy > sender, Ptr< Packet > packet,
           Ptr<MobilityModel> receiverMobility = (*i)->GetMobility ()->
             GetObject<MobilityModel> ();
 
-          NS_LOG_INFO ("Receiver mobility: " <<
-                       receiverMobility->GetPosition ());
+          //NS_LOG_INFO ("Receiver mobility: " <<receiverMobility->GetPosition ());
 
           // Compute delay using the delay model
           Time delay = m_delay->GetDelay (senderMobility, receiverMobility);
 
           // Compute received power using the loss model
-          double rxPowerDbm = GetRxPower (txPowerDbm, senderMobility,
-                                          receiverMobility);
+          double rxPowerDbm;
+
+          //NS_LOG_INFO("Is using building "<<m_isUsingBuilding);
+          if(!m_isUsingBuilding)
+          {
+        	  rxPowerDbm=GetRxPower (txPowerDbm, senderMobility,receiverMobility);
+          }
+          else{
+        	  rxPowerDbm=GetRxPowerWithBuildings (txPowerDbm, senderMobility,receiverMobility);
+          }
+
 
           NS_LOG_DEBUG ("Propagation: txPower=" << txPowerDbm <<
                         "dbm, rxPower=" << rxPowerDbm << "dbm, " <<
@@ -152,13 +170,13 @@ CunbChannel::Send (Ptr< CunbPhy > sender, Ptr< Packet > packet,
           uint32_t dstNode = 0;
           if (dstNetDevice != 0)
             {
-              NS_LOG_INFO ("Getting node index from NetDevice, since it exists");
+              //NS_LOG_INFO ("Getting node index from NetDevice, since it exists");
               dstNode = dstNetDevice->GetNode ()->GetId ();
               NS_LOG_DEBUG ("dstNode = " << dstNode);
             }
           else
             {
-              NS_LOG_INFO ("No net device connected to the PHY, using context 0");
+              //NS_LOG_INFO ("No net device connected to the PHY, using context 0");
             }
 
           // Create the parameters object based on the calculations above
@@ -168,7 +186,7 @@ CunbChannel::Send (Ptr< CunbPhy > sender, Ptr< Packet > packet,
           parameters.frequencyMHz = frequencyMHz;
 
           // Schedule the receive event
-          NS_LOG_INFO ("Scheduling reception of the packet");
+          //NS_LOG_INFO ("Scheduling reception of the packet");
           Simulator::ScheduleWithContext (dstNode, delay, &CunbChannel::Receive,
                                           this, j, packet, parameters);
 
@@ -195,6 +213,14 @@ CunbChannel::GetRxPower (double txPowerDbm, Ptr<MobilityModel> senderMobility,
 {
   return m_loss->CalcRxPower (txPowerDbm, senderMobility, receiverMobility);
 }
+
+double
+CunbChannel::GetRxPowerWithBuildings (double txPowerDbm, Ptr<MobilityModel> senderMobility,
+                         Ptr<MobilityModel> receiverMobility) const
+{
+  return m_lossBuilding->CalcRxPower (txPowerDbm, senderMobility, receiverMobility);
+}
+
 
 std::ostream &operator << (std::ostream &os, const CunbChannelParameters &params)
 {

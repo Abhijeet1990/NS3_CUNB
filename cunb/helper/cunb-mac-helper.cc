@@ -112,22 +112,6 @@ CunbMacHelper::ConfigureForEuRegion (Ptr<MSCunbMac> msMac) const
   /////////////////////////////////////////////////////
   msMac->SetTxDbmForTxPower (std::vector<double> {16, 14, 12, 10, 8, 6, 4, 2});
 
-  ////////////////////////////////////////////////////////////
-  // Matrix to know which DataRate the eNB will respond with //
-  ////////////////////////////////////////////////////////////
-  /*
-  CunbMac::ReplyDataRateMatrix matrix = {{{{0,0,0,0,0,0}},
-                                          {{1,0,0,0,0,0}},
-                                          {{2,1,0,0,0,0}},
-                                          {{3,2,1,0,0,0}},
-                                          {{4,3,2,1,0,0}},
-                                          {{5,4,3,2,1,0}},
-                                          {{6,5,4,3,2,1}},
-                                          {{7,6,5,4,3,2}}}};
-  msMac->SetReplyDataRateMatrix (matrix);
-    */
-
-
   /////////////////////
   // Preamble length //
   /////////////////////
@@ -137,8 +121,8 @@ CunbMacHelper::ConfigureForEuRegion (Ptr<MSCunbMac> msMac) const
   // Second receive window parameters //
   //////////////////////////////////////
   msMac->SetSecondReceiveWindowDataRate (0);
-  msMac->SetSecondReceiveWindowFrequency (868.1);
-  msMac->SetThirdReceiveWindowFrequency (868.1);
+  msMac->SetSecondReceiveWindowFrequency (868.2);
+  msMac->SetThirdReceiveWindowFrequency (868.25);
 }
 
 void
@@ -160,14 +144,25 @@ CunbMacHelper::ConfigureForEuRegion (Ptr<EnbCunbMac> enbMac) const
       enbPhy->ResetReceptionPaths ();
 
       std::vector<double> frequencies;
-      frequencies.push_back (868.1);
-      frequencies.push_back (868.3);
-      frequencies.push_back (868.5);
+
+      double end_freq = 868.3;
+      double start_freq = 868.1;
+      uint8_t microchannels = 150;
+
+      // create micro channels
+      double step_size = (end_freq - start_freq)/microchannels;
+      for (uint8_t i = 0; i < microchannels;i++)
+      {
+    	end_freq = start_freq + step_size;
+    	double center_freq = (start_freq + end_freq) / 2;
+        frequencies.push_back(center_freq);
+        start_freq = start_freq + step_size;
+       }
 
       std::vector<double>::iterator it = frequencies.begin ();
 
       int receptionPaths = 0;
-      int maxReceptionPaths = 8;
+      int maxReceptionPaths = microchannels;
       while (receptionPaths < maxReceptionPaths)
         {
           if (it == frequencies.end ())
@@ -188,20 +183,31 @@ CunbMacHelper::ApplyCommonEuConfigurations (Ptr<CunbMac> cunbMac) const
   // SubBands //
   //////////////
 
+  double end_freq = 868.3;
+  double start_freq = 868.1;
+  uint8_t microchannels = 150;
+
+  // create micro channels
+  double step_size = (end_freq - start_freq)/microchannels;
+
   LogicalCunbChannelHelper channelHelper;
-  channelHelper.AddSubBand (868, 868.6,  14);
-  channelHelper.AddSubBand (868.7, 869.2,  14);
-  channelHelper.AddSubBand (869.4, 869.65,  27);
 
   //////////////////////
-  // Default channels //
-  //////////////////////
-  Ptr<LogicalCunbChannel> lc1 = CreateObject<LogicalCunbChannel> (868.1, 0, 5);
-  Ptr<LogicalCunbChannel> lc2 = CreateObject<LogicalCunbChannel> (868.3, 0, 5);
-  Ptr<LogicalCunbChannel> lc3 = CreateObject<LogicalCunbChannel> (868.5, 0, 5);
-  channelHelper.AddChannel (lc1);
-  channelHelper.AddChannel (lc2);
-  channelHelper.AddChannel (lc3);
+    // Default channels //
+    //////////////////////
+
+  Ptr<LogicalCunbChannel> lc[microchannels];
+
+  for(uint8_t i = 0 ; i < microchannels ; i++)
+  {
+	  end_freq = start_freq + step_size;
+	  channelHelper.AddSubBand (start_freq, end_freq,  0);
+	  double center_freq = (start_freq + end_freq) / 2;
+      NS_LOG_INFO("center freq" << center_freq);
+	  lc[i] = CreateObject<LogicalCunbChannel>(center_freq, 0, 5);
+	  start_freq = start_freq + step_size;
+	  channelHelper.AddChannel (lc[i]);
+  }
 
   cunbMac->SetLogicalCunbChannelHelper (channelHelper);
 

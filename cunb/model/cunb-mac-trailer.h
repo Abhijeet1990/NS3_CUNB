@@ -2,6 +2,7 @@
 #define CUNB_MAC_TRAILER_H
 
 #include <ns3/trailer.h>
+#include "ns3/cunb-mac-header-ul.h"
 
 namespace ns3 {
 
@@ -86,8 +87,16 @@ public:
 
   void SetAuth (Ptr<const Packet> p);
 
-
   bool CheckAuth (Ptr<const Packet> p);
+
+  void SetAuthDL (Ptr<const Packet> p, uint8_t seqCnt, uint16_t ident);
+
+  bool CheckAuthDL (Ptr<const Packet> p, uint8_t seqCnt, uint16_t ident);
+
+  CunbMacHeaderUl GetMacHeader(void);
+
+  void SetMacHeader(CunbMacHeaderUl macHdr);
+
 
 
 private:
@@ -106,6 +115,8 @@ private:
 
   uint16_t GenerateHash (uint8_t *data, int length);
 
+  uint16_t GenerateHashWithSeqIdent(uint8_t *data, int length, uint16_t ident, uint8_t seq);
+
   /**
    * The FCS value stored in this trailer.
    */
@@ -113,11 +124,14 @@ private:
   uint16_t m_fcs;
   uint16_t m_ecc;
 
+
   /**
    * Only if m_calcFcs is true, FCS values will be calculated and used in the
    * trailer
    */
   bool m_calcFcs;
+
+  CunbMacHeaderUl m_macHdr;
 
 };
 

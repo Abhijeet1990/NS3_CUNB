@@ -20,7 +20,8 @@ public:
    */
 	enum MType {
 		SINGLE_ACK = 0,
-	    MULTIPLE_ACK = 1
+	    MULTIPLE_ACK = 1,
+	    HELLO = 2
 	  };
 
   static TypeId GetTypeId (void);
@@ -94,6 +95,19 @@ public:
 
   uint8_t GetRepCnts(void) const;
 
+  void SetSeqCnt(uint8_t seqCnt);
+
+  uint8_t GetSeqCnt(void) const;
+
+  void SetIdent(uint16_t ident);
+
+  uint16_t GetIdent(void) const;
+
+  /*
+  void SetIdent(uint32_t ident);
+
+  uint32_t GetIdent(void) const;
+  */
   void SetData(uint64_t data);
 
   uint64_t GetData(void) const;
@@ -116,7 +130,11 @@ private:
   uint8_t m_fsize;
   uint8_t m_ack_flags;
   uint8_t m_rep_cnt;
+  uint8_t m_seq_cnt;
+  uint16_t m_ident;
+  //uint32_t m_ident;
   uint64_t m_data;
+
 
 };
 }

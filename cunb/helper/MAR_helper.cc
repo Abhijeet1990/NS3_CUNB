@@ -18,10 +18,11 @@ MARHelper::MARHelper ()
 
   //m_factory.Set ("PacketSize", StringValue ("ns3::ParetoRandomVariable[Bound=10|Shape=2.5]"));
   m_expInterval = CreateObject<ExponentialRandomVariable> ();
-  m_initialDelay = CreateObject<UniformRandomVariable> ();
-  m_initialDelay->SetAttribute ("Min", DoubleValue (0));
+  //m_initialDelay = CreateObject<UniformRandomVariable> ();
+  //m_initialDelay->SetAttribute ("Min", DoubleValue (0));
   m_packetSize = 32; // Application Payload size can vary from 0-32 bytes
   m_intervalProb = CreateObject<UniformRandomVariable> ();
+  m_period = Seconds(60);
 }
 
 MARHelper::~MARHelper ()
@@ -58,6 +59,7 @@ MARHelper::InstallPriv (Ptr<Node> node, enum packetType pType) const
   NS_LOG_FUNCTION (this << node);
 
   Ptr<MobileAutonomousReporting> app = m_factory.Create<MobileAutonomousReporting> ();
+  m_mac->SetMobileAutonomousReporting(app);
 
   Time interval;
 
@@ -69,9 +71,12 @@ MARHelper::InstallPriv (Ptr<Node> node, enum packetType pType) const
 	  interval = Seconds(m_intervalProb->GetValue());
 	  break;
   case Normal:
+	  /*
   	  m_intervalProb->SetAttribute("Min", DoubleValue (0.0));
   	  m_intervalProb->SetAttribute ("Max", DoubleValue (300.0));
   	  interval = Seconds(m_intervalProb->GetValue());
+  	  */
+	  interval = m_period;
   	  break;
   case Alarm:
 	  m_expInterval->SetAttribute ("Mean", DoubleValue (1.0));
@@ -86,7 +91,9 @@ MARHelper::InstallPriv (Ptr<Node> node, enum packetType pType) const
   NS_LOG_DEBUG ("Created an application with interval = " <<
                 interval.GetHours () << " hours");
 
-  app->SetInitialDelay (Seconds (m_initialDelay->GetValue (0, interval.GetSeconds ())));
+ // app->SetInitialDelay (Seconds (m_initialDelay->GetValue (0, interval.GetSeconds ())));
+  NS_LOG_INFO("initial delay "<<m_initialDelay);
+  app->SetInitialDelay (Seconds(m_initialDelay));
 
   app->SetNode (node);
   node->AddApplication (app);
@@ -95,9 +102,21 @@ MARHelper::InstallPriv (Ptr<Node> node, enum packetType pType) const
 }
 
 void
+MARHelper::SetInitialDelay(Time delay)
+{
+	m_initialDelay = delay;
+}
+
+void
 MARHelper::SetPeriod (Time period)
 {
   m_period = period;
+}
+
+void
+MARHelper::SetMac(Ptr<MSCunbMac> mac)
+{
+	m_mac = mac;
 }
 } // namespace ns3
 

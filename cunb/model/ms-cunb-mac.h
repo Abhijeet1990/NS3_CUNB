@@ -15,7 +15,10 @@
 #include "ns3/mac48-address.h"
 #include "ns3/cunb-beacon-header.h"
 #include "ns3/cunb-beacon-trailer.h"
-
+#include "ns3/node-container.h"
+#include "ns3/one-time-reporting.h"
+#include "ns3/mobile-autonomous-reporting.h"
+#include "ns3/hello-sender.h"
 namespace ns3 {
 
 /**
@@ -43,6 +46,10 @@ public:
    */
   virtual void Send (Ptr<Packet> packet);
 
+  void SendRetransmitted(Ptr<Packet> packet, uint8_t repCount);
+
+  void RetransmitHello(Ptr<Packet> packet, uint8_t repCount);
+
   /**
    * Receive a packet.
    *
@@ -53,6 +60,9 @@ public:
    */
   virtual void Receive (Ptr<Packet const> packet);
 
+  virtual void ReceiveRequest (Ptr<Packet const> packet);
+
+  virtual void SendRequest (Ptr<Packet> packet , Ptr<Node> ms);
   /**
    * Perform the actions that are required after a packet send.
    *
@@ -63,7 +73,7 @@ public:
   /**
    * Perform operations needed to open the first receive window.
    */
-  void OpenFirstReceiveWindow (void);
+  void OpenFirstReceiveWindow (uint8_t pType);
 
   /**
    * Perform operations needed to open the second receive window.
@@ -90,10 +100,16 @@ public:
     */
   void CloseThirdReceiveWindow (void);
 
+  // check the APDU type
+  uint8_t CheckAPDUType(Ptr<Packet> packet);
+
   /////////////////////////
   // Getters and Setters //
   /////////////////////////
 
+  void SetIdent(uint16_t ident);
+
+  uint16_t GetIdent(void);
   /**
    * Set the data rate this end device will use when transmitting. For MS
    * , this value is assumed to be fixed, and can be modified via MAC
@@ -219,6 +235,18 @@ public:
    */
   void SetMType (CunbMacHeaderUl::MType mType);
 
+  void SetOneTimeReporting(Ptr<OneTimeReporting> otr);
+
+  Ptr<OneTimeReporting> GetOneTimeReporting (void);
+
+  void SetMobileAutonomousReporting(Ptr<MobileAutonomousReporting> otr);
+
+  Ptr<MobileAutonomousReporting> GetMobileAutonomousReporting (void);
+
+  void SetHelloSender(Ptr<HelloSender> hs);
+
+  Ptr<HelloSender> GetHelloSender (void);
+
 
   ////////////////////////////////////
   // Logical channel administration //
@@ -259,6 +287,10 @@ public:
    */
   void AddSubBand (double startFrequency, double endFrequency,
                    double maxTxPowerDbm);
+
+  void SetFrequencyToSend(double frequency);
+
+  double GetFrequencyToSend(void);
 
   virtual void ReceiveBeacon(Ptr<Packet const> beaconPacket);
   virtual void SendBeacon(Ptr<Packet> beaconPacket);
@@ -342,11 +374,11 @@ private:
      * This Event is used to cancel the third window in case the second one is
      * successful.
      */
-    EventId m_thirdReceiveWindow;
+  EventId m_thirdReceiveWindow;
 
-    EventId m_firstRetransmit;
+  EventId m_firstRetransmit;
 
-    EventId m_secondRetransmit;
+  EventId m_secondRetransmit;
 
 
   /**
@@ -374,6 +406,18 @@ private:
    */
   uint8_t m_thirdReceiveWindowDataRate;
 
+  /*
+   * Implementation of Events for Re-sending Hello
+   * if no AA-Request is received for the Smart Meter
+   *
+   * */
+
+  EventId m_secondReceiveRequestWindow;
+  EventId m_thirdReceiveRequestWindow;
+  Time m_firstReceiveRequestWindowDuration;
+  Time m_secondReceiveRequestWindowDuration;
+  EventId m_firstHelloRetransmit;
+  EventId m_secondHelloRetransmit;
 
   /**
    * The last known link margin.
@@ -402,10 +446,30 @@ private:
    */
   TracedValue<double> m_aggregatedDutyCycle;
 
+  TracedCallback<Ptr<const Packet>> m_sendAssociation;
+  TracedCallback<Ptr<const Packet>> m_sendHello;
+  TracedCallback<Ptr<const Packet>> m_reSendHello;
+  TracedCallback<Ptr<const Packet>> m_reSendData;
+
   /**
    * The message type to apply to packets sent with the Send method.
    */
   CunbMacHeaderUl::MType m_mType;
+
+  Ptr<OneTimeReporting> m_oneTimeReporting;
+
+  Ptr<HelloSender> m_helloSender;
+
+  Ptr<MobileAutonomousReporting> m_mobileAutonomousReporting;
+
+  bool m_ifMARStarted;
+
+  uint8_t m_seq_cnt;
+
+  uint16_t m_ident;
+
+  double m_freq_to_send; // This is used to reuse the same frequency with which the ACK has been received for the data packet for further transmission
+
 };
 
 } /* namespace ns3 */

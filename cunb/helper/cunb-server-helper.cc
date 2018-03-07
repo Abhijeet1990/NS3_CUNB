@@ -64,10 +64,13 @@ CunbServerHelper::InstallPriv (Ptr<Node> node)
 
   Ptr<SimpleCunbServer> app = m_factory.Create<SimpleCunbServer> ();
 
+  app->SetEnbs(m_enbs);
+  app->SetMss(m_mss);
+
   app->SetNode (node);
   node->AddApplication (app);
 
-  // Cycle on each gateway
+  // Cycle on each base station
   for (NodeContainer::Iterator i = m_enbs.Begin ();
        i != m_enbs.End ();
        i++)

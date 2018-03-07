@@ -23,7 +23,6 @@ def build(bld):
         'model/ms-cunb-phy.cc',
         'model/enb-cunb-mac.cc',
         'model/ms-cunb-mac.cc',
-        'model/cunb-mac-command.cc',
         'model/cunb-device-address.cc',
         'model/cunb-frame-header.cc',
         'model/cunb-frame-header-ul.cc',
@@ -40,6 +39,7 @@ def build(bld):
         'model/cunb-beacon-header.cc',
         'model/cunb-beacon-trailer.cc',
         'model/one-time-reporting.cc',
+        'model/one-time-requesting.cc',
         'model/beacon-sender.cc',
         'model/app-layer-header.cc',
         'helper/cunb-mac-helper.cc',
@@ -51,8 +51,11 @@ def build(bld):
         'helper/cunb-server-helper.cc',
         'helper/cunb-forwarder-helper.cc',
         'helper/OTR_Helper.cc',
+        'helper/OTRe_Helper.cc',
         'helper/beacon-sender-helper.cc',
-        
+        'model/new-cosem-header.cc',
+        'model/hello-sender.cc',
+        'helper/Hello_helper.cc'    
         ]
 
     module_test = bld.create_ns3_module_test_library('cunb')
@@ -77,7 +80,6 @@ def build(bld):
         'model/ms-cunb-phy.h',
         'model/enb-cunb-mac.h',
         'model/ms-cunb-mac.h',
-        'model/cunb-mac-command.h',
         'model/cunb-device-address.h',
         'model/cunb-frame-header.h',
         'model/cunb-frame-header-ul.h',
@@ -94,6 +96,7 @@ def build(bld):
         'model/cunb-beacon-header.h',
         'model/cunb-beacon-trailer.h',
         'model/one-time-reporting.h',
+        'model/one-time-requesting.h',
         'model/beacon-sender.h',
         'model/app-layer-header.h',
         'helper/cunb-mac-helper.h',
@@ -105,8 +108,11 @@ def build(bld):
         'helper/cunb-server-helper.h',
         'helper/cunb-forwarder-helper.h',
         'helper/OTR_Helper.h',
+        'helper/OTRe_Helper.h',
         'helper/beacon-sender-helper.h',
-        
+        'model/new-cosem-header.h',
+        'model/hello-sender.h',
+        'helper/Hello_helper.h'
         ]
 
     if bld.env.ENABLE_EXAMPLES:

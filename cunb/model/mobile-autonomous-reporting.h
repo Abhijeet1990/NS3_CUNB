@@ -36,7 +36,7 @@ public:
   /**
    * Send a packet using the CunbNetDevice's Send method
    */
-  void SendPacket (void);
+  void SendPacket (double frequency);
 
   /**
    * Start the application by scheduling the first SendPacket event
@@ -47,6 +47,8 @@ public:
    * Stop the application
    */
   void StopApplication (void);
+
+  void StartMAR(Ptr<Packet> packet, double frequency);
 
 private:
   /**
@@ -64,6 +66,8 @@ private:
    */
   EventId m_sendEvent;
 
+  EventId m_startMAREvent;
+
   /**
    * The MAC layer of this node
    */
@@ -79,6 +83,8 @@ private:
    * Whether or not this application uses a random packet size.
    */
   bool m_randomPktSize;
+
+
 };
 
 } //namespace ns3

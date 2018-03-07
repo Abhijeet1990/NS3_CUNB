@@ -48,21 +48,26 @@ CunbMacHeaderUl::Serialize (Buffer::Iterator start) const
   // The 40 bit header
   uint64_t header = 0;
 
-      // The MType
-      header |= m_preamble*(uint64_t)pow(2,32);
+      header |= m_preamble*(uint64_t)pow(2,56);
+      header |= m_mtype*(uint64_t)pow(2,48);
+      header |= m_fsize*(uint64_t)pow(2,40);
+      header |= m_ack_flags*(uint64_t)pow(2,32);
+      header |= m_rep_cnt*(uint64_t)pow(2,24);
+      header |= m_seq_cnt*(uint64_t)pow(2,16);
+      header |= m_ident;
+/*
+  header |= m_preamble*(uint64_t)pow(2,57);
+  header |= m_mtype*(uint64_t)pow(2,49);
+  header |= m_fsize*(uint64_t)pow(2,42);
+  header |= m_ack_flags*(uint64_t)pow(2,34);
+  header |= m_rep_cnt*(uint64_t)pow(2,26);
+  header |= m_seq_cnt*(uint64_t)pow(2,18);
+  header |= m_ident;
+ */
+  // Write the byte
+  start.WriteU64 (header);
 
-      header |= m_mtype*(uint64_t)pow(2,24);
-
-      header |= m_fsize*(uint64_t)pow(2,16);
-
-      header |= m_ack_flags*(uint64_t)pow(2,8);
-
-      header |= m_rep_cnt;
-
-      // Write the byte
-      start.WriteU64 (header);
-
-      NS_LOG_DEBUG ("Serialization of MAC header: " << std::bitset<64>(header));
+  NS_LOG_DEBUG ("Serialization of MAC header: " << std::bitset<64>(header));
 
 }
 
@@ -76,15 +81,22 @@ CunbMacHeaderUl::Deserialize (Buffer::Iterator start)
   uint64_t data;
   data = start.ReadU64 ();
   // Get header components
-  m_rep_cnt = data & 0xf;
-
-  m_ack_flags = (data >> 8) & 0xf;
-
-  m_fsize = (data >> 16) & 0xf;
-
-  m_mtype = (data >> 24) & 0xf;
-
-  m_preamble = (data >> 32) & 0xf;
+  /*
+  m_ident = data & 0xff;
+  m_seq_cnt = (data >> 16) & 0xf;
+  m_rep_cnt = (data >> 24) & 0xf;
+  m_ack_flags = (data >> 32) & 0xf;
+  m_fsize = (data >> 40) & 0xf;
+  m_mtype = (data >> 48) & 0xf;
+  m_preamble = (data >> 56) & 0xf;
+  */
+  m_ident = data & 0xffff;
+   m_seq_cnt = (data >> 16) & 0xff;
+   m_rep_cnt = (data >> 24) & 0xff;
+   m_ack_flags = (data >> 32) & 0xff;
+   m_fsize = (data >> 40) & 0xff;
+   m_mtype = (data >> 48) & 0xff;
+   m_preamble = (data >> 56) & 0xff;
 
   return 8;   // the number of bytes consumed.
 }
@@ -201,5 +213,54 @@ CunbMacHeaderUl::GetRepCnts(void) const
   return m_rep_cnt;
 }
 
+void
+CunbMacHeaderUl::SetSeqCnt(uint8_t seqCnt)
+{
+  NS_LOG_FUNCTION_NOARGS ();
 
+  m_seq_cnt = seqCnt;
+}
+
+uint8_t
+CunbMacHeaderUl::GetSeqCnt(void) const
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  return m_seq_cnt;
+}
+
+
+void
+CunbMacHeaderUl::SetIdent(uint16_t ident)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  m_ident = ident;
+}
+
+uint16_t
+CunbMacHeaderUl::GetIdent(void) const
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  return m_ident;
+}
+
+/*
+void
+CunbMacHeaderUl::SetIdent(uint32_t ident)
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  m_ident = ident;
+}
+
+uint32_t
+CunbMacHeaderUl::GetIdent(void) const
+{
+  NS_LOG_FUNCTION_NOARGS ();
+
+  return m_ident;
+}
+*/
 }

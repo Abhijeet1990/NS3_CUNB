@@ -147,6 +147,12 @@ CunbPhy::SetReceiveOkBeaconCallback (RxOkCallbackBeacon callback)
 }
 
 void
+CunbPhy::SetReceiveRequestOkCallback (RxReOkCallback callback)
+{
+  m_rxReOkCallback = callback;
+}
+
+void
 CunbPhy::SetTxFinishedCallback (TxFinishedCallback callback)
 {
   m_txFinishedCallback = callback;
@@ -180,6 +186,8 @@ CunbPhy::GetOnAirTime (Ptr<Packet> packet, CunbTxParameters txParams, enum Devic
   // Compute the symbol duration
   // Bandwidth is in Hz
   tSym = 2/txParams.bitrate;
+
+  return Seconds (pl * 4 * tSym);
 
   // Compute the preamble duration
   // Considering 8 bits for a preamble represent 4 symbol.
