@@ -32,6 +32,8 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("HelloIntegrationTrace");
 
+uint32_t sm_count = 4000;
+uint8_t enb_count = 3;
 // Variables that stores the status of captured packets
 int noMoreReceivers = 0;
 int interfered = 0;
@@ -51,12 +53,7 @@ int resent_hello = 0;
 int resent_data = 0;
 
 // Run the simulation for 20 Hrs. 20*60*60 = 72000 sec
-double simulation_endtime = 75000.0;
 
-//int simulation_endtime = 360;
-
-// RI = 2 Hr = 7200 sec
-double reporting_interval = 15.0;
 
 int received_by_sm = 0;
 int received_by_bs = 0;
@@ -68,8 +65,7 @@ int wrong_freq = 0;
 
 int phy_rx_begin = 0;
 
-uint32_t sm_count = 4000;
-uint8_t enb_count = 3;
+
 
 enum PacketOutcome {
   RECEIVED,
@@ -300,8 +296,16 @@ int main (int argc, char *argv[])
 
   bool verbose = false;
 
+  double simulation_endtime = 75000.0;
+
+  double reporting_interval = 15.0;
+
   CommandLine cmd;
   cmd.AddValue ("verbose", "Whether to print output or not", verbose);
+  cmd.AddValue("ri", "Reporting Interval", reporting_interval);
+  cmd.AddValue("simulate_till", "Simulation end time (in Seconds)", simulation_endtime);
+  //cmd.AddValue("sm_count", "Number of smart meters", sm_count);
+  //cmd.AddValue("bs_count", "Number of base stations", enb_count);
   cmd.Parse (argc, argv);
 
 
