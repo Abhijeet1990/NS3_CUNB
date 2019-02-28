@@ -97,7 +97,7 @@ MSCunbMac::MSCunbMac () :
   m_ident(0),
   m_freq_to_send(0.0)
 {
-  NS_LOG_FUNCTION (this);
+  //NS_LOG_FUNCTION (this);
 
   // Initialize the random variable we'll use to decide which channel to
   // transmit on.
@@ -233,7 +233,7 @@ MSCunbMac::Send (Ptr<Packet> packet)
 
       m_seq_cnt+=1;
       // cycle it back to 0
-      //NS_LOG_INFO(" The sequence Number "<< (int)m_seq_cnt);
+      NS_LOG_INFO("seq_no:"<< (int)m_seq_cnt);
       //if(m_seq_cnt == 16) m_seq_cnt = 0;
       if(m_seq_cnt == 256) m_seq_cnt = 0;
 
@@ -487,7 +487,8 @@ MSCunbMac::SendRetransmitted(Ptr<Packet> packet,uint8_t repCount)
 	      ApplyNecessaryOptions (macHdr);
 	      macHdr.SetRepCnts(repCount);
 
-		  NS_LOG_INFO(" The sequence Number "<< (int)m_seq_cnt << " ident "<< (int)m_ident);
+	      NS_LOG_INFO("seq_no:"<< (int)m_seq_cnt);
+		  //NS_LOG_INFO(" The sequence Number "<< (int)m_seq_cnt << " ident "<< (int)m_ident);
 	      macHdr.SetSeqCnt(m_seq_cnt);
 	      macHdr.SetIdent(m_ident);
 	      packet->AddHeader (macHdr);
@@ -625,7 +626,7 @@ MSCunbMac::Receive (Ptr<Packet const> packet)
   CunbMacHeader hdr;
   packetToGetAuthBit->RemoveHeader(hdr);
   uint8_t ackbit = hdr.GetAckBits();
-  //NS_LOG_INFO ("Ack Bit " << ackbit);
+  //NS_LOG_INFO ("Ack Bit " << (int)ackbit);
 
   CunbMacTrailer macTlr;
   macTlr.EnableFcs(true);
@@ -647,7 +648,7 @@ MSCunbMac::Receive (Ptr<Packet const> packet)
   // Remove the Mac Header to get some information
   CunbMacHeader macHdr;
   packetCopy->RemoveHeader (macHdr);
-
+  //NS_LOG_INFO(" The sequence Number rec"<< macHdr.Get);
 
   // Only keep analyzing the packet if it's downlink
   if (!macHdr.IsUplink ())
@@ -669,7 +670,9 @@ MSCunbMac::Receive (Ptr<Packet const> packet)
 
       if (messageForUs)
         {
-          //NS_LOG_INFO ("The message is for us! received ACK!! ");
+
+          //NS_LOG_INFO ("Received ACK!! Ack Bit : "<<(int)ackbit);
+    	  NS_LOG_INFO ("Ack_bit:"<<(int)ackbit);
 
           Ptr<Packet> packetForTag = packet->Copy();
           CunbTag tag;
@@ -692,7 +695,7 @@ MSCunbMac::Receive (Ptr<Packet const> packet)
           // Start mobileAutonomousReporting if not started
           if(!m_ifMARStarted)
           {
-        	  NS_LOG_INFO("Starts MAR");
+        	  //NS_LOG_INFO("Starts MAR");
               m_mobileAutonomousReporting->StartMAR(packet_MAR,m_freq_to_send);
               m_ifMARStarted = true;
           }

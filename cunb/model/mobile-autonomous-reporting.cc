@@ -42,7 +42,7 @@ MobileAutonomousReporting::MobileAutonomousReporting () :
   m_randomPktSize (0)
 
 {
-  NS_LOG_FUNCTION_NOARGS ();
+  //NS_LOG_FUNCTION_NOARGS ();
 }
 
 MobileAutonomousReporting::~MobileAutonomousReporting ()
@@ -53,21 +53,21 @@ MobileAutonomousReporting::~MobileAutonomousReporting ()
 void
 MobileAutonomousReporting::SetInterval (Time interval)
 {
-  NS_LOG_FUNCTION (this << interval);
+  //NS_LOG_FUNCTION (this << interval);
   m_interval = interval;
 }
 
 Time
 MobileAutonomousReporting::GetInterval (void) const
 {
-  NS_LOG_FUNCTION (this);
+  //NS_LOG_FUNCTION (this);
   return m_interval;
 }
 
 void
 MobileAutonomousReporting::SetInitialDelay (Time delay)
 {
-  NS_LOG_FUNCTION (this << delay);
+  //NS_LOG_FUNCTION (this << delay);
   m_initialDelay = delay;
 }
 
@@ -82,7 +82,7 @@ MobileAutonomousReporting::StartMAR(Ptr<Packet> packet, double frequency)
 void
 MobileAutonomousReporting::SendPacket (double frequency)
 {
-  NS_LOG_FUNCTION (this);
+  //NS_LOG_FUNCTION (this);
 
   // Create and send a new packet
   //int size = m_pktSize->GetInteger ();
@@ -128,17 +128,18 @@ MobileAutonomousReporting::SendPacket (double frequency)
   m_mac->GetObject<MSCunbMac> ()->SetFrequencyToSend(frequency);
   m_mac->Send (packet);
 
+
   // Schedule the next SendPacket event
   m_sendEvent = Simulator::Schedule (m_interval, &MobileAutonomousReporting::SendPacket,
                                      this,frequency);
 
-  NS_LOG_DEBUG ("Sent a packet of size " << packet->GetSize ());
+  //NS_LOG_DEBUG ("Sent a packet of size " << packet->GetSize ());
 }
 
 void
 MobileAutonomousReporting::StartApplication (void)
 {
-  NS_LOG_FUNCTION (this);
+  //NS_LOG_FUNCTION (this);
 
   // Make sure we have a MAC layer
   if (m_mac == 0)
@@ -152,11 +153,11 @@ MobileAutonomousReporting::StartApplication (void)
 
   // Schedule the next SendPacket event
   Simulator::Cancel (m_sendEvent);
-  NS_LOG_DEBUG ("Starting up application with a first event with a " <<
-                m_initialDelay.GetSeconds () << " seconds delay");
+  //NS_LOG_DEBUG ("Starting up application with a first event with a " <<
+    //            m_initialDelay.GetSeconds () << " seconds delay");
   m_sendEvent = Simulator::Schedule (m_initialDelay,
                                      &MobileAutonomousReporting::SendPacket, this,0.0);
-  NS_LOG_DEBUG ("Event Id: " << m_sendEvent.GetUid ());
+  //NS_LOG_DEBUG ("Event Id: " << m_sendEvent.GetUid ());
 }
 
 void
