@@ -32,8 +32,8 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("HelloIntegrationTrace");
 
-uint32_t sm_count = 4000;
-uint8_t enb_count = 3;
+uint32_t sm_count = 40;
+uint8_t enb_count = 1;
 // Variables that stores the status of captured packets
 int noMoreReceivers = 0;
 int interfered = 0;
@@ -319,9 +319,6 @@ int main (int argc, char *argv[])
   //LogComponentEnable("CunbFrameHeader", LOG_LEVEL_ALL);
   //LogComponentEnable("CunbMacHeader", LOG_LEVEL_ALL);
   //LogComponentEnable("NewTypeAPDU", LOG_LEVEL_ALL);
-
-
-
   //LogComponentEnable("CunbFrameHeaderUl", LOG_LEVEL_ALL);
   //LogComponentEnable("CunbMacHeaderUl", LOG_LEVEL_ALL);
   //LogComponentEnable("CunbMacTrailerUl", LOG_LEVEL_ALL);
@@ -333,6 +330,7 @@ int main (int argc, char *argv[])
   //LogComponentEnable("MSCunbPhy", LOG_LEVEL_ALL);
   //LogComponentEnable("LogicalCunbChannelHelper", LOG_LEVEL_ALL);
   LogComponentEnable ("MSCunbMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("MobileAutonomousReporting", LOG_LEVEL_ALL);
   //LogComponentEnable ("OneTimeReporting", LOG_LEVEL_ALL);
   //LogComponentEnable ("OneTimeRequesting", LOG_LEVEL_ALL);
   //LogComponentEnable("PointToPointNetDevice", LOG_LEVEL_ALL);
@@ -533,7 +531,7 @@ int main (int argc, char *argv[])
 	  double sendtime = poisson->GetValue ();
 	  count+=sendtime;
   	  helloHelper[i].SetSendTime(Seconds(count));
-  	  std::cout <<"sending "<< count <<std::endl;
+  	  //std::cout <<"sending "<< count <<std::endl;
   	  //helloHelper[i].SetSendTime(Seconds(sendtime));
   	  //helloHelper[i].SetSendTime(Seconds(20*i + 10));
 
@@ -546,10 +544,13 @@ int main (int argc, char *argv[])
   helloContainer.Start (Seconds (0));
   helloContainer.Stop (Seconds(simulation_endtime));
 
+  // This is used for the AARQ-AARE
   OTRHelper oneTimeHelper[sm_count];
   ApplicationContainer appContainer;
   for(uint32_t i = 0; i<sm_count ;i++)
   {
+	  // this is just to make it start immediately after the ACK for the Hello is received.
+	  // Setting this to high value will not allow it to make the application start independent
 	  oneTimeHelper[i].SetSendTime(Seconds(1000000));
 	  Ptr<MSCunbMac> mac = endDevices.Get(i)->GetDevice(0)->GetObject<CunbNetDevice>()->GetMac()->GetObject<MSCunbMac>();
 	  oneTimeHelper[i].SetMac(mac);
@@ -562,6 +563,8 @@ int main (int argc, char *argv[])
    for(uint32_t i = 0; i<sm_count ;i++)
      {
    	  appHelper[i].SetPeriod(Seconds(reporting_interval));
+   	  // this is just to make it start immediately aftee the AARE association is received.
+   	  // Setting this to high value will not allow it to make the application start independent
    	  appHelper[i].SetInitialDelay(Seconds(10000000));
    	  Ptr<MSCunbMac> mac = endDevices.Get(i)->GetDevice(0)->GetObject<CunbNetDevice>()->GetMac()->GetObject<MSCunbMac>();
    	  appHelper[i].SetMac(mac);
@@ -584,7 +587,6 @@ int main (int argc, char *argv[])
   cunbServerHelper.SetEnbs (enbs);
   cunbServerHelper.SetMSs(endDevices);
   cunbServerHelper.Install (cunbServers);
-
 
   // Install the Forwarder application on the eNBs
   CunbForwarderHelper forwarderHelper;
